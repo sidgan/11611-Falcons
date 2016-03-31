@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import nltk as nl
-import sys
-import re, string
 import math
 import operator
-import nltk
-from nltk.tag import pos_tag, map_tag
-from textblob import TextBlob
-from collections import defaultdict
+import re
+import sys
 from collections import Counter
-from pprint import pprint
+from collections import defaultdict
+
+import nltk as nl
+
+WORD = re.compile(r'\w+')
 
 
 def main(argv=None):
@@ -26,7 +25,7 @@ def main(argv=None):
     paras = process_text(paras)
     paras = ' . '.join(paras)
 
-    # Remove Stop Words from Query and Article
+    # TODO: Remove Stop Words from Query and Article
     curr_article = Article(paras.decode('utf-8'))
 
     # print bm25_ranker(curr_article,question,1.2,0.75,0,10)
@@ -34,6 +33,7 @@ def main(argv=None):
 
 
 def process_text(sentences):
+    # "Hello World!" -> "hello world !"
     new_sen = list()
     for sen in sentences:
         s = re.sub('([.,!?()])', r' \1 ', sen)
@@ -66,7 +66,7 @@ def bm25_ranker(article, question, k1, b, k3, K):
                 # print k3_term
                 # print '-' * 100
                 line2score[sentence] = line2score.get(sentence, 0) + log_term * (
-                (float)(article.get_tf(term)) / (article.get_tf(term) + k1_term)) * k3_term;
+                    (float)(article.get_tf(term)) / (article.get_tf(term) + k1_term)) * k3_term;
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(K, len(line2score))]
 
@@ -83,9 +83,7 @@ def cos_similarity_ranker(article, question, K):
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(K, len(line2score))]
 
 
-######### CHANGE ###############
-WORD = re.compile(r'\w+')
-
+####################### CHANGE ########################
 
 def get_cosine(vec1, vec2):
     intersection = set(vec1.keys()) & set(vec2.keys())
@@ -104,7 +102,6 @@ def get_cosine(vec1, vec2):
 def text_to_vector(text):
     words = WORD.findall(text)
     return Counter(words)
-
 
 #######################################################
 
@@ -135,7 +132,7 @@ class Article:
         return 0
 
 
-class classifier:
+class FeatureExtractor:
     '''Extract WH-WORD'''
 
     '''Extract HEAD-WORD -> 1st Noun Chunk + 1st Verb Chunk'''
@@ -150,6 +147,19 @@ class classifier:
 
     def __init__(self):
         pass
+
+
+class Classifier:
+
+    def __init__(self):
+        pass
+
+    def train(self):
+        pass
+
+    def predict(self):
+        pass
+
 
 if __name__ == '__main__':
     main()
