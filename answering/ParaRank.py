@@ -24,22 +24,10 @@ def main(argv=None):
         paras = file.readlines()
 
     paras = process_text(paras)
-
     paras = ' . '.join(paras)
 
-    # nltk.download()
-
-    # Remvoe Stop Words from Query and Article
+    # Remove Stop Words from Query and Article
     curr_article = Article(paras.decode('utf-8'))
-
-    # blob = TextBlob("Hello World ! I am Avnishs",ap_tagger)
-
-    # nltk.download()
-    # print nltk.word_tokenize("Hello World!, my name is Avnish!")
-    # posTagged = nltk.pos_tag(nltk.word_tokenize("Hello World!, my name is Avnish!"))
-    # print posTagged
-    # simplifiedTags = [(word, map_tag('en-ptb', 'universal', tag)) for word, tag in posTagged]
-    # print(simplifiedTags)
 
     # print bm25_ranker(curr_article,question,1.2,0.75,0,10)
     print cos_similarity_ranker(curr_article, question, 10)
@@ -146,6 +134,22 @@ class Article:
             return self.tf[term]
         return 0
 
+
+class classifier:
+    '''Extract WH-WORD'''
+
+    '''Extract HEAD-WORD -> 1st Noun Chunk + 1st Verb Chunk'''
+    # posTagged = nltk.pos_tag(nltk.word_tokenize("Hello World!"))
+    # print posTagged
+
+    '''Extract WORD-SHAPE'''
+
+    '''Extact N-GRAMS'''
+
+    '''Extract WORDNET SEMANTIC FTRS'''
+
+    def __init__(self):
+        pass
 
 if __name__ == '__main__':
     main()
