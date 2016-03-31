@@ -28,6 +28,8 @@ def main(argv=None):
     # TODO: Remove Stop Words from Query and Article
     curr_article = Article(paras.decode('utf-8'))
 
+    print nl.pos_tag(nl.word_tokenize("Hello World!"))
+
     # print bm25_ranker(curr_article,question,1.2,0.75,0,10)
     print cos_similarity_ranker(curr_article, question, 10)
 
