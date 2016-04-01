@@ -28,10 +28,10 @@ def main(argv=None):
     # TODO: Remove Stop Words from Query and Article
     curr_article = Article(paras.decode('utf-8'))
 
-    print nl.pos_tag(nl.word_tokenize("Hello World!"))
-
+    fe = FeatureExtractor()
+    print fe.extract_head("who was the inventor of television ?");
     # print bm25_ranker(curr_article,question,1.2,0.75,0,10)
-    print cos_similarity_ranker(curr_article, question, 10)
+    # print cos_similarity_ranker(curr_article, question, 10)
 
 
 def process_text(sentences):
@@ -137,13 +137,66 @@ class Article:
 class FeatureExtractor:
     '''Extract WH-WORD'''
 
-    '''Extract HEAD-WORD -> 1st Noun Chunk + 1st Verb Chunk'''
+    def extract_wh_word(self, terms):
+        return terms[0]
+
+    '''Extract HEAD-WORD'''
+
+    def extract_head(self, terms):
+        # terms = nl.word_tokenize(question)
+
+        if terms[0] in ['when', 'where', 'why']:
+            return None
+
+        elif terms[0] == 'how':
+            return terms[1]
+
+        elif terms[0] == 'what':
+            if terms[1] in {'is', 'are'}:
+                if terms[-2:] in [['composed', 'of'], ['made', 'of']] or terms[-3:] == ['made', 'out', 'of']:
+                    return 'enty_subs'
+
+                if terms[-2:] == ['used', 'for']:
+                    return 'desc_reason_p2'
+
+                if len(terms) < 5:
+                    return 'desc_def_p1'
+
+            elif terms[1] in {'do', 'does'}:
+                if terms[-1:] in {'mean', 'means'}:
+                    return 'desc_def_p2'
+
+                if terms[-2:] == ['stand', 'for']:
+                    return 'abbr_exp'
+
+                if terms[0] == 'does' and terms[-1:] == 'do':
+                    return 'desc_desc'
+
+                if terms[1:4] == ['do', 'you', 'call']:
+                    return 'entity_term'
+
+            elif terms[1] in {'causes', 'cause'}:
+                return 'desc_reason_p1'
+
+        elif terms[0] == 'who' and terms[1] in {'is', 'are', 'was', 'were'} and (
+            (terms[2] == 'the' and nl.pos_tag(terms[3])[0][1].startswith('NN')) or nl.pos_tag(terms[2])[0][
+            1].startswith('NN')):
+            return 'hum_desc'
+
+        tags = nl.pos_tag(terms)
+        for i in range(len(terms)):
+            if tags[i][1].startswith('NN'):
+                return terms[i]
+
     # posTagged = nltk.pos_tag(nltk.word_tokenize("Hello World!"))
     # print posTagged
 
     '''Extract WORD-SHAPE'''
 
     '''Extact N-GRAMS'''
+
+    def extract_bigrams(self, terms):
+        return map(lambda (w1, w2): w1 + " " + w2, zip(terms, terms[1:]))
 
     '''Extract WORDNET SEMANTIC FTRS'''
 
