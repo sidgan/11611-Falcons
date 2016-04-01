@@ -188,15 +188,14 @@ class FeatureExtractor:
             if tags[i][1].startswith('NN'):
                 return terms[i]
 
-    # posTagged = nltk.pos_tag(nltk.word_tokenize("Hello World!"))
-    # print posTagged
-
     '''Extract WORD-SHAPE'''
 
     '''Extact N-GRAMS'''
-
     def extract_bigrams(self, terms):
         return map(lambda (w1, w2): w1 + " " + w2, zip(terms, terms[1:]))
+
+    def extract_trigrams(self, terms):
+        return map(lambda (w1, w2, w3): w1 + " " + w2 + " " + w3, zip(terms, terms[1:], terms[2:]))
 
     '''Extract WORDNET SEMANTIC FTRS'''
 
