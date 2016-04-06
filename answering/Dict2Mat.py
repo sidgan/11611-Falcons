@@ -1,7 +1,7 @@
 __author__ = 'pbamotra'
 
-from gensim import corpora
 import gensim
+from gensim import corpora
 
 
 class Dict2Mat:
@@ -19,11 +19,11 @@ class Dict2Mat:
         return doc_term_matrix.transpose()
 
 
-if __name__ == '__main__':
-    sample = [['what', 'nn-nnp', 'location-o'],
-              ['what', 'nn-nnp', 'vb-vbz', 'location-o', 'organization-o']]
-    dic2mat = Dict2Mat()
-    for document in sample:
-        dic2mat.add_document(document)
-
-    print dic2mat.get_doc_term_matrix()
+        # if __name__ == '__main__':
+        #     sample = [['what', 'nn-nnp', 'location-o'],
+        #               ['what', 'nn-nnp', 'vb-vbz', 'location-o', 'organization-o']]
+        #     dic2mat = Dict2Mat()
+        #     for document in sample:
+        #         dic2mat.add_document(document)
+        #
+        #     print dic2mat.get_doc_term_matrix()
