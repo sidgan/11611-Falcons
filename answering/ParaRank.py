@@ -19,9 +19,13 @@ def main(argv=None):
     articlePath = '../data/a1.txt'
     question = u"When was Dempsey born ?"
 
+    '''
+    TODO: Since we have picked the model you won't need to run training/testing
+    '''
+
     with open('../data/qa_classification_tr.txt', 'r') as f:
         lines = f.readlines()
-        qc = QuestionClassifier()
+        qc = QuestionClassifier(use_pickle=True)
         qc.train(lines)
 
     with open('../data/qa_classification_te.txt', 'r') as f:
@@ -29,6 +33,7 @@ def main(argv=None):
         acc, pred = qc.test(lines)
         print acc
         # print pred
+
     #
     # print qc.predict("Where was Pankesh born?")
     # print qc.predict("When was Pankesh born?")
