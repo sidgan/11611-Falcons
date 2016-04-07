@@ -2,12 +2,11 @@ __author__ = 'avnishs'
 
 import Queue
 import re
-from collections import Counter
-
+import pickle
 import numpy as np
 from sklearn import linear_model
-from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.externals import joblib
 
 from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
@@ -18,17 +17,16 @@ class QuestionClassifier:
     PATTERN = re.compile(r"(\w+):(\w+) (.+)")
     MODEL = None
     FEATURE_TEMPLATE = None
-    USE_PICKLE = False
 
     def __init__(self, use_pickle=False):  # TODO: Set use_pickle = False to re-train models
-        self.USE_PICKLE = use_pickle
-        if self.USE_PICKLE:
+        self.use_pickle = use_pickle
+        if self.use_pickle:
             print 'Loading pickled model'
             self.MODEL = joblib.load('../data/q_classifier.pkl')
             self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
 
     def train(self, training_set):
-        if self.USE_PICKLE:
+        if self.use_pickle:
             print 'Pickled model was loaded'
         else:
             print 'Training: Extracting Features...'
@@ -64,9 +62,10 @@ class QuestionClassifier:
 
             print 'Training: Complete'
 
+
     def test(self, testing_set):
         print 'Testing: Extracting Features...'
-        if self.MODEL is None or not self.USE_PICKLE:
+        if self.MODEL is None:
             print "Call the train function first!"
             return None
         count = 0
@@ -82,12 +81,13 @@ class QuestionClassifier:
         print 'Testing: Making predictions'
         predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
         print 'Testing: Complete'
+        from collections import Counter
         print Counter(predictions)
         print confusion_matrix(testing_labels, predictions)
         return accuracy_score(testing_labels, predictions), predictions
 
     def predict(self, question):
-        if self.MODEL is None or not self.USE_PICKLE:
+        if self.MODEL is None or not self.use_pickle:
             print "Call the train function first!"
             return None
         fe = FeatureExtractor()
