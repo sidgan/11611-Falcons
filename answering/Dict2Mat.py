@@ -31,6 +31,7 @@ class Dict2Mat:
     def get_dictionary(self):
         return self.dictionary
 
+
 '''
 if __name__ == '__main__':
     sample = [['what', 'nn-nnp', 'location-o'],

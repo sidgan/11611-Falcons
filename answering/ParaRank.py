@@ -11,6 +11,7 @@ from QuestionClassifier import QuestionClassifier
 
 WORD = re.compile(r'\w+')
 
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
@@ -56,7 +57,8 @@ def process_text(sentences):
         s = re.sub('([.,!?()])', r' \1 ', sen)
         s = re.sub('\s{2,}', ' ', s.strip())
         s = s.lower().strip()
-        if len(s) < 1: continue
+        if len(s) < 1:
+            continue
         new_sen.append(s)
     return new_sen
 
@@ -75,15 +77,15 @@ def bm25_ranker(article, question, k1, b, k3, K):
 
         for sentence in article.sentences:
             if term in sentence:
-                log_term = math.log10((article.get_N() - df[term] + 0.5) / (float)(df[term] + 0.5))
+                log_term = math.log10((article.get_N() - df[term] + 0.5) / float(df[term] + 0.5))
                 # print log_term
-                k1_term = k1 * ((1 - b) + b * (len(sentence) / (float)(article.get_avg_dlen())))
+                k1_term = k1 * ((1 - b) + b * (len(sentence) / float(article.get_avg_dlen())))
                 # print k1_term
-                k3_term = ((float)((k3 + 1) * qtf[term])) / (k3 + qtf[term])
+                k3_term = (float((k3 + 1) * qtf[term])) / (k3 + qtf[term])
                 # print k3_term
                 # print '-' * 100
                 line2score[sentence] = line2score.get(sentence, 0) + log_term * (
-                    (float)(article.get_tf(term)) / (article.get_tf(term) + k1_term)) * k3_term;
+                    float(article.get_tf(term)) / (article.get_tf(term) + k1_term)) * k3_term
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(K, len(line2score))]
 
@@ -98,6 +100,7 @@ def cos_similarity_ranker(article, question, K):
         line2score[sentence] = get_cosine(text_to_vector(question), text_to_vector(sentence))
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(K, len(line2score))]
+
 
 ####################### CHANGE ########################
 
@@ -118,6 +121,7 @@ def get_cosine(vec1, vec2):
 def text_to_vector(text):
     words = WORD.findall(text)
     return Counter(words)
+
 
 #######################################################
 
