@@ -25,7 +25,7 @@ def main(argv=None):
 
     with open('../data/qa_classification_tr.txt', 'r') as f:
         lines = f.readlines()
-        qc = QuestionClassifier(use_pickle=True)
+        qc = QuestionClassifier()
         qc.train(lines)
 
     with open('../data/qa_classification_te.txt', 'r') as f:

@@ -7,7 +7,7 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.externals import joblib
-
+from collections import Counter
 from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
 
@@ -17,29 +17,31 @@ class QuestionClassifier:
     PATTERN = re.compile(r"(\w+):(\w+) (.+)")
     MODEL = None
     FEATURE_TEMPLATE = None
+    USE_PICKLE = False
+    FEATURE_EXTRACTOR = None
 
     def __init__(self, use_pickle=False):  # TODO: Set use_pickle = False to re-train models
-        self.use_pickle = use_pickle
-        if self.use_pickle:
+        self.USE_PICKLE = use_pickle
+        self.FEATURE_EXTRACTOR = FeatureExtractor()
+        if self.USE_PICKLE:
             print 'Loading pickled model'
             self.MODEL = joblib.load('../data/q_classifier.pkl')
             self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
 
     def train(self, training_set):
-        if self.use_pickle:
+        if self.USE_PICKLE:
             print 'Pickled model was loaded'
         else:
             print 'Training: Extracting Features...'
             q = Queue.Queue()
             training_features = Dict2Mat()
             training_labels = list()
-            fe = FeatureExtractor()
             count = 0
             for sentence in training_set:
                 count += 1
                 match = self.PATTERN.match(sentence)
                 # threading.Thread(target=fe.extract_features, args = (match.group(3),q)).start()
-                training_features.add_document(fe.extract_features(match.group(3)))
+                training_features.add_document(self.FEATURE_EXTRACTOR.extract_features(match.group(3)))
                 training_labels.append(self.LABELS.index(match.group(1)))
                 print 'datapoint ' + str(count)
 
@@ -62,32 +64,30 @@ class QuestionClassifier:
 
             print 'Training: Complete'
 
-
     def test(self, testing_set):
         print 'Testing: Extracting Features...'
         if self.MODEL is None:
             print "Call the train function first!"
-            return None
+            exit()
         count = 0
-        fe = FeatureExtractor()
         testing_features = Dict2Mat(False)
         testing_labels = list()
         for sentence in testing_set:
             count += 1
             match = self.PATTERN.match(sentence)
-            testing_features.add_document(fe.extract_features(match.group(3)))
+            testing_features.add_document(self.FEATURE_EXTRACTOR.extract_features(match.group(3)))
             testing_labels.append(self.LABELS.index(match.group(1)))
             print 'datapoint ' + str(count)
         print 'Testing: Making predictions'
         predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
         print 'Testing: Complete'
-        from collections import Counter
-        print Counter(predictions)
+        print predictions
+        print Counter(map(lambda i:self.LABELS[i],predictions))
         print confusion_matrix(testing_labels, predictions)
         return accuracy_score(testing_labels, predictions), predictions
 
     def predict(self, question):
-        if self.MODEL is None or not self.use_pickle:
+        if self.MODEL is None:
             print "Call the train function first!"
             return None
         fe = FeatureExtractor()

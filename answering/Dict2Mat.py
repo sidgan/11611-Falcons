@@ -31,6 +31,9 @@ class Dict2Mat:
     def get_dictionary(self):
         return self.dictionary
 
+    def get_next_document(self):
+        for document in self.documents:
+            yield document
 
 '''
 if __name__ == '__main__':
