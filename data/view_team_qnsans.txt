@@ -1,0 +1,145 @@
+﻿team_id	qn_id	article_title	base_path	qn_difficulty_by_questioner	qn_text	is_disfluent?	is_bad_qn?	answer	qn_difficulty_by_answerer
+Falcons	1	Million_Dollar_Baby	data/set4/a4	hard	What is the pen name of Jerry Boyd?	False	False	cutman	easy
+Falcons	1	Million_Dollar_Baby	data/set4/a4	hard	What is the pen name of Jerry Boyd?	False	False	F.X. Toole	medium
+Falcons	2	Million_Dollar_Baby	data/set4/a4	hard	Who owned Hot Pit?	True	False		hard
+Falcons	2	Million_Dollar_Baby	data/set4/a4	hard	Who owned Hot Pit?	False	True	Frankie Dunn	hard
+Falcons	3	Million_Dollar_Baby	data/set4/a4	hard	Did the movie win the Best Picture Academy Award?	False	False	Yes	easy
+Falcons	3	Million_Dollar_Baby	data/set4/a4	hard	Did the movie win the Best Picture Academy Award?	True	False		
+Falcons	4	Million_Dollar_Baby	data/set4/a4	medium	How many Academy Awards did the movie win?	False	False	four	easy
+Falcons	4	Million_Dollar_Baby	data/set4/a4	medium	How many Academy Awards did the movie win?	True	False		
+Falcons	5	Million_Dollar_Baby	data/set4/a4	medium	What is this film about?	False	False	underappreciated boxing trainer	easy
+Falcons	5	Million_Dollar_Baby	data/set4/a4	medium	What is this film about?	True	False		
+Falcons	6	Million_Dollar_Baby	data/set4/a4	medium	Who wrote the screenplay?	False	False	Paul Haggis	easy
+Falcons	6	Million_Dollar_Baby	data/set4/a4	medium	Who wrote the screenplay?	True	False		
+Falcons	7	Million_Dollar_Baby	data/set4/a4	easy	Did Million Dollar Baby have a limited release initially?	False	False	Yes	easy
+Falcons	7	Million_Dollar_Baby	data/set4/a4	easy	Did Million Dollar Baby have a limited release initially?	False	False	Yes	medium
+Falcons	8	Million_Dollar_Baby	data/set4/a4	easy	Is the film about an underappreciated boxing trainer?	False	False	Yes	too easy
+Falcons	8	Million_Dollar_Baby	data/set4/a4	easy	Is the film about an underappreciated boxing trainer?	True	False		
+Falcons	9	Million_Dollar_Baby	data/set4/a4	easy	Is Million Dollar Baby a sports drama film?	False	False	Yes	easy
+Falcons	9	Million_Dollar_Baby	data/set4/a4	easy	Is Million Dollar Baby a sports drama film?	False	False	Yes	medium
+Falcons	10	John_Terry	data/set1/a10	hard	Why was Terry moved to centre back during his early career?	True	False		hard
+Falcons	10	John_Terry	data/set1/a10	hard	Why was Terry moved to centre back during his early career?	False	False	Terry was moved to centre back during his early career due to a shortage of central defenders.	medium
+Falcons	11	John_Terry	data/set1/a10	hard	Are John Terry's children twins?	False	False	Yes	medium
+Falcons	11	John_Terry	data/set1/a10	hard	Are John Terry's children twins?	False	False	Yes	easy
+Falcons	12	John_Terry	data/set1/a10	hard	How is Paul related to Terry?	False	False	Brother	easy
+Falcons	12	John_Terry	data/set1/a10	hard	How is Paul related to Terry?	False	False	Paul is Terry's older brother.	medium
+Falcons	13	John_Terry	data/set1/a10	medium	When did Terry make his Chelsea debut?	False	False	28 October 1998	easy
+Falcons	13	John_Terry	data/set1/a10	medium	When did Terry make his Chelsea debut?	False	False	Terry made his Chelsea debut on 28 October 1998.	medium
+Falcons	14	John_Terry	data/set1/a10	medium	Who named John Terry as the England captain succeeding David Bekham?	False	False	Steve McClaren	hard
+Falcons	14	John_Terry	data/set1/a10	medium	Who named John Terry as the England captain succeeding David Bekham?	False	False	Steve McClaren named John Terry as the England captain, succeeding David Beckham.	medium
+Falcons	15	John_Terry	data/set1/a10	medium	When did Terry make his England debut?	False	False	 June 2003	easy
+Falcons	15	John_Terry	data/set1/a10	medium	When did Terry make his England debut?	False	False	Terry made his England debut in June 2003.	medium
+Falcons	16	John_Terry	data/set1/a10	easy	Was Terry born in Barking, East London?	False	False	Yes	easy
+Falcons	16	John_Terry	data/set1/a10	easy	Was Terry born in Barking, East London?	False	False	Yes	easy
+Falcons	17	John_Terry	data/set1/a10	easy	Does Terry play as a centre back?	False	False	Yes	too easy
+Falcons	17	John_Terry	data/set1/a10	easy	Does Terry play as a centre back?	False	False	Yes	easy
+Falcons	18	John_Terry	data/set1/a10	easy	Is John Terry an English professional footballer?	False	False	Yes	too easy
+Falcons	18	John_Terry	data/set1/a10	easy	Is John Terry an English professional footballer?	False	False	Yes	easy
+Falcons	19	Slumdog_Millionaire	data/set4/a3	hard	Who wrote the book 'The Three Musketeers'?	False	False	Alexandre Dumas	too hard
+Falcons	19	Slumdog_Millionaire	data/set4/a3	hard	Who wrote the book 'The Three Musketeers'?	False	False	Alexandre Dumas wrote the book  'The Three Musketeers'.	hard
+Falcons	20	Slumdog_Millionaire	data/set4/a3	hard	When did the shooting of Slumdog Millionaire begin?	False	False	 5 November 2007	hard
+Falcons	20	Slumdog_Millionaire	data/set4/a3	hard	When did the shooting of Slumdog Millionaire begin?	False	False	Filming of Slumdog Millionaire began on 5 November 2007.	hard
+Falcons	21	Slumdog_Millionaire	data/set4/a3	hard	What was Jamal Malik's age in 2006?	False	False	18	hard
+Falcons	21	Slumdog_Millionaire	data/set4/a3	hard	What was Jamal Malik's age in 2006?	False	False	Jamal was eighteen years old in 2006.	medium
+Falcons	22	Slumdog_Millionaire	data/set4/a3	medium	Where was Jamal born and raised?	False	False	The poverty of Bombay/Mumbai	medium
+Falcons	22	Slumdog_Millionaire	data/set4/a3	medium	Where was Jamal born and raised?	False	False	Jamal born and raised in Bombay/Mumbai.	hard
+Falcons	23	Slumdog_Millionaire	data/set4/a3	medium	Who composed the soundtrack of Slumdog Millionaire?	False	False	A R Rahman	medium
+Falcons	23	Slumdog_Millionaire	data/set4/a3	medium	Who composed the soundtrack of Slumdog Millionaire?	False	False	The Slumdog Millionaire soundtrack was composed by A. R. Rahman.	medium
+Falcons	24	Slumdog_Millionaire	data/set4/a3	medium	Who wrote the novel Q & A?	False	False	Vikas Swarup	hard
+Falcons	24	Slumdog_Millionaire	data/set4/a3	medium	Who wrote the novel Q & A?	False	False	Vikas Swarup wrote the novel Q & A.	hard
+Falcons	25	Slumdog_Millionaire	data/set4/a3	easy	In the movie Slumdog Millionaire, does Jamal seek Amitabh Bachchan's autograph?	False	False	Yes	easy
+Falcons	25	Slumdog_Millionaire	data/set4/a3	easy	In the movie Slumdog Millionaire, does Jamal seek Amitabh Bachchan's autograph?	False	False	Yes	hard
+Falcons	26	Slumdog_Millionaire	data/set4/a3	easy	Did Slumdog Millionaire win the BAFTA Award for Best Film?	False	False	Yes	easy
+Falcons	26	Slumdog_Millionaire	data/set4/a3	easy	Did Slumdog Millionaire win the BAFTA Award for Best Film?	False	False	Yes	hard
+Falcons	27	Slumdog_Millionaire	data/set4/a3	easy	Did Madhur Mittal play the role of Jamal Malik?	False	False	No	easy
+Falcons	27	Slumdog_Millionaire	data/set4/a3	easy	Did Madhur Mittal play the role of Jamal Malik?	False	False	No	medium
+Falcons	28	Landon_Donovan	data/set1/a2	hard	How many games did Landon Donovan play for Everton?	False	False	17	too hard
+Falcons	28	Landon_Donovan	data/set1/a2	hard	How many games did Landon Donovan play for Everton?	True	False		too hard
+Falcons	29	Landon_Donovan	data/set1/a2	hard	Who was captain of LA Galaxy in the 2013 season?	False	False	Robbie Keane	hard
+Falcons	29	Landon_Donovan	data/set1/a2	hard	Who was captain of LA Galaxy in the 2013 season?	True	False	Robbie Keane	too hard
+Falcons	30	Landon_Donovan	data/set1/a2	hard	Who was U.S. Soccer Athlete of the Year in 2004?	False	False	Landon Donovan	hard
+Falcons	30	Landon_Donovan	data/set1/a2	hard	Who was U.S. Soccer Athlete of the Year in 2004?	False	False	Landon Donovan	hard
+Falcons	31	Landon_Donovan	data/set1/a2	medium	Which state was Landon Donovan born in?	False	False	California	medium
+Falcons	31	Landon_Donovan	data/set1/a2	medium	Which state was Landon Donovan born in?	False	False	California	hard
+Falcons	32	Landon_Donovan	data/set1/a2	medium	Where is Landon Donovan's maternal grandmother from?	False	False	County Kerry	medium
+Falcons	32	Landon_Donovan	data/set1/a2	medium	Where is Landon Donovan's maternal grandmother from?	True	False	County Kerry	too hard
+Falcons	33	Landon_Donovan	data/set1/a2	medium	When did Beckham join AC Milan on loan?	False	False	early 2009	medium
+Falcons	33	Landon_Donovan	data/set1/a2	medium	When did Beckham join AC Milan on loan?	False	False	Beckham joined AC Milan on loan in early 2009.	medium
+Falcons	34	Landon_Donovan	data/set1/a2	easy	Does Landon Donovan speak fluent Spanish?	False	False	Yes	easy
+Falcons	34	Landon_Donovan	data/set1/a2	easy	Does Landon Donovan speak fluent Spanish?	False	False	Yes	medium
+Falcons	35	Landon_Donovan	data/set1/a2	easy	Did Donovan sign a six-year contract for Bayern Munich?	True	False	No	too hard
+Falcons	35	Landon_Donovan	data/set1/a2	easy	Did Donovan sign a six-year contract for Bayern Munich?	True	False		
+Falcons	36	Landon_Donovan	data/set1/a2	easy	Did Landon Donovan play as a forward?	False	False	Yes	easy
+Falcons	36	Landon_Donovan	data/set1/a2	easy	Did Landon Donovan play as a forward?	False	False	Yes	medium
+Falcons	37	The_Artist_(film)	data/set4/a1	hard	Who are the two protagonists of the movie 'The Artist'?	False	False	Jean Dujardin and Berenice Bejo	hard
+Falcons	37	The_Artist_(film)	data/set4/a1	hard	Who are the two protagonists of the movie 'The Artist'?	False	False	George Valentin and Peppy Miller	hard
+Falcons	38	The_Artist_(film)	data/set4/a1	hard	Which three hit movies did Michel Hazanavicius produce?	False	False	 OSS 117: Cairo, Nest of Spies and OSS 117: Lost in Rio	hard
+Falcons	38	The_Artist_(film)	data/set4/a1	hard	Which three hit movies did Michel Hazanavicius produce?	False	False	OSS 117: Cairo, Nest of Spies and OSS 117: Lost in Rio	hard
+Falcons	39	The_Artist_(film)	data/set4/a1	hard	Which movie review portals gave 'The Artist' a high rating?	False	False	Rotten Tomatoes and Metacritic	hard
+Falcons	39	The_Artist_(film)	data/set4/a1	hard	Which movie review portals gave 'The Artist' a high rating?	False	False	Rotten Tomatoes, Spill.com and Metacritic	hard
+Falcons	40	The_Artist_(film)	data/set4/a1	medium	What genre does 'The Artist' belong to?	False	False	romantic comedy-drama	hard
+Falcons	40	The_Artist_(film)	data/set4/a1	medium	What genre does 'The Artist' belong to?	False	False	Romantic comedy-drama	hard
+Falcons	41	The_Artist_(film)	data/set4/a1	medium	For how many categories did 'The Artist' win a golden globe award?	False	False	3	medium
+Falcons	41	The_Artist_(film)	data/set4/a1	medium	For how many categories did 'The Artist' win a golden globe award?	False	False	Three	medium
+Falcons	42	The_Artist_(film)	data/set4/a1	medium	Was Peppy's first sound film a hit?	True	False	Yes	too hard
+Falcons	42	The_Artist_(film)	data/set4/a1	medium	Was Peppy's first sound film a hit?	False	False	Yes	hard
+Falcons	43	The_Artist_(film)	data/set4/a1	easy	Did Jean Dujardin win an award at 2011 Cannes Film Festival?	False	False	Yes	easy
+Falcons	43	The_Artist_(film)	data/set4/a1	easy	Did Jean Dujardin win an award at 2011 Cannes Film Festival?	False	False	Yes	easy
+Falcons	44	The_Artist_(film)	data/set4/a1	easy	Was 'The Artist' nominated at the Cesar Awards?	False	False	Yes	easy
+Falcons	44	The_Artist_(film)	data/set4/a1	easy	Was 'The Artist' nominated at the Cesar Awards?	False	False	Yes	easy
+Falcons	45	The_Artist_(film)	data/set4/a1	easy	Did Valentin attempt the suicide with a handgun?	False	False	Yes	easy
+Falcons	45	The_Artist_(film)	data/set4/a1	easy	Did Valentin attempt the suicide with a handgun?	False	True	Yes	easy
+Falcons	46	Cancer_(constellation)	data/set2/a5	hard	What is the other name of the Beehive cluster?	False	False	Praesepe 	hard
+Falcons	46	Cancer_(constellation)	data/set2/a5	hard	What is the other name of the Beehive cluster?	False	False	The other name of the Beehive cluster is Cancer	hard
+Falcons	47	Cancer_(constellation)	data/set2/a5	hard	When is the Sun aligned with the Cancer constellation?	False	False	July 21 to August 9	hard
+Falcons	47	Cancer_(constellation)	data/set2/a5	hard	When is the Sun aligned with the Cancer constellation?	False	False	From July 21 to August 9	hard
+Falcons	48	Cancer_(constellation)	data/set2/a5	hard	How far is the Messier 67 from the earth?	False	False	 2500 light-years	medium
+Falcons	48	Cancer_(constellation)	data/set2/a5	hard	How far is the Messier 67 from the earth?	False	False	Messier 67 is 2500 light-years away from the earth	hard
+Falcons	49	Cancer_(constellation)	data/set2/a5	medium	What symbol is the Cancer zodiac represented by?	False	False	crab	hard
+Falcons	49	Cancer_(constellation)	data/set2/a5	medium	What symbol is the Cancer zodiac represented by?	False	False	Crab	medium
+Falcons	50	Cancer_(constellation)	data/set2/a5	medium	In which direction to the Cancer constellation does Leo Minor lies?	False	False	North east	medium
+Falcons	50	Cancer_(constellation)	data/set2/a5	medium	In which direction to the Cancer constellation does Leo Minor lies?	False	True	Leo Minor lies to the northeast of Cancer	medium
+Falcons	51	Cancer_(constellation)	data/set2/a5	medium	Who conducted the VLBI experiments in 2002?	False	False	 Edward Fomalont and Sergei Kopeikin	medium
+Falcons	51	Cancer_(constellation)	data/set2/a5	medium	Who conducted the VLBI experiments in 2002?	False	False	Edward Fomalont and Sergei Kopeikin	medium
+Falcons	52	Cancer_(constellation)	data/set2/a5	easy	Are there habitable planets in the Cancer constellation?	True	False		too hard
+Falcons	52	Cancer_(constellation)	data/set2/a5	easy	Are there habitable planets in the Cancer constellation?	False	False	Yes	easy
+Falcons	53	Cancer_(constellation)	data/set2/a5	easy	Is Cancer the dimmest constellation?	False	False	yes	easy
+Falcons	53	Cancer_(constellation)	data/set2/a5	easy	Is Cancer the dimmest constellation?	False	False	Yes	easy
+Falcons	54	Cancer_(constellation)	data/set2/a5	easy	Did Egyptians know about the Cancer constellation?	False	False	Yes	hard
+Falcons	54	Cancer_(constellation)	data/set2/a5	easy	Did Egyptians know about the Cancer constellation?	False	False	Yes	easy
+Falcons	55	Ophiuchus	data/set2/a7	hard	Name a star in Ophiuchus constellation	False	False	&#945; Ophiuchi	medium
+Falcons	55	Ophiuchus	data/set2/a7	hard	Name a star in Ophiuchus constellation	False	False	&#945; Ophiuchi	medium
+Falcons	56	Ophiuchus	data/set2/a7	hard	Which constellation is located opposite to Ophiuchus?	False	False	Orion	medium
+Falcons	56	Ophiuchus	data/set2/a7	hard	Which constellation is located opposite to Ophiuchus?	False	False	Orion	easy
+Falcons	57	Ophiuchus	data/set2/a7	hard	Which telescope was used to discover the Ophiuchus Superbubble?	False	False	Green Bank Telescope	medium
+Falcons	57	Ophiuchus	data/set2/a7	hard	Which telescope was used to discover the Ophiuchus Superbubble?	False	False	Green Bank Telescope	medium
+Falcons	58	Ophiuchus	data/set2/a7	medium	When was Kepler's supernova first observed?	False	False	9 October 1604	hard
+Falcons	58	Ophiuchus	data/set2/a7	medium	When was Kepler's supernova first observed?	False	False	9 October 1604	hard
+Falcons	59	Ophiuchus	data/set2/a7	medium	Which are the two brightest stars in Ophiuchus?	False	False	&#945; Ophiuchi and &#951; Ophiuchi	medium
+Falcons	59	Ophiuchus	data/set2/a7	medium	Which are the two brightest stars in Ophiuchus?	False	False	&#945; Ophiuchi and &#951; Ophiuchi	medium
+Falcons	60	Ophiuchus	data/set2/a7	medium	 How many modern constellations are there?	False	False	88	medium
+Falcons	60	Ophiuchus	data/set2/a7	medium	 How many modern constellations are there?	False	False	88	easy
+Falcons	61	Ophiuchus	data/set2/a7	easy	What was Ophiuchus formally referred to?	False	False	Serpentarius and Anguitenens	medium
+Falcons	61	Ophiuchus	data/set2/a7	easy	What was Ophiuchus formally referred to?	False	False	Serpentarius	easy
+Falcons	62	Ophiuchus	data/set2/a7	easy	When is Ophiuchus best visible in northern hemisphere?	False	False	In northern hemisphere, Ophiuchus is best visible in summer	medium
+Falcons	62	Ophiuchus	data/set2/a7	easy	When is Ophiuchus best visible in northern hemisphere?	False	False	summer	easy
+Falcons	63	Ophiuchus	data/set2/a7	easy	How far is the Barnard 68 nebula from Earth ?	False	False	410 light-years	hard
+Falcons	63	Ophiuchus	data/set2/a7	easy	How far is the Barnard 68 nebula from Earth ?	False	False	 410 light-years	medium
+Falcons	64	Star_Trek_(film)	data/set4/a8	hard	When was Star Trek planned to release before the release date was moved?	False	False	December 25, 2008	medium
+Falcons	64	Star_Trek_(film)	data/set4/a8	hard	When was Star Trek planned to release before the release date was moved?	False	False	December 25, 2008	hard
+Falcons	65	Star_Trek_(film)	data/set4/a8	hard	In which country was the movie Star Trek shot?	False	False	United States of America	hard
+Falcons	65	Star_Trek_(film)	data/set4/a8	hard	In which country was the movie Star Trek shot?	False	False	United States of America	hard
+Falcons	66	Star_Trek_(film)	data/set4/a8	hard	In which city of Canada was Star Trek screened prior to release?	False	False	Calgary, Alberta	hard
+Falcons	66	Star_Trek_(film)	data/set4/a8	hard	In which city of Canada was Star Trek screened prior to release?	False	False	Calgary	hard
+Falcons	67	Star_Trek_(film)	data/set4/a8	medium	Name the sequel of Star Trek	False	False	Star Trek Into Darkness	medium
+Falcons	67	Star_Trek_(film)	data/set4/a8	medium	Name the sequel of Star Trek	False	False	Star Trek Into Darkness	medium
+Falcons	68	Star_Trek_(film)	data/set4/a8	medium	What was the total earning of the Star Trek movie?	False	False	$385,494,555	hard
+Falcons	68	Star_Trek_(film)	data/set4/a8	medium	What was the total earning of the Star Trek movie?	False	False	$385.7 million	medium
+Falcons	69	Star_Trek_(film)	data/set4/a8	medium	Who played the character Spock in the Star Trek movie?	False	False	Zachary Quinto	medium
+Falcons	69	Star_Trek_(film)	data/set4/a8	medium	Who played the character Spock in the Star Trek movie?	False	False	Zachary Quinto	medium
+Falcons	70	Star_Trek_(film)	data/set4/a8	easy	In the Star Trek movie, who is Narada's first officer?	False	False	Ayel	medium
+Falcons	70	Star_Trek_(film)	data/set4/a8	easy	In the Star Trek movie, who is Narada's first officer?	False	False	Ayel	easy
+Falcons	71	Star_Trek_(film)	data/set4/a8	easy	When did the shooting of the Star Trek movie begin?	False	False	November 7, 2007	hard
+Falcons	71	Star_Trek_(film)	data/set4/a8	easy	When did the shooting of the Star Trek movie begin?	False	False	November 7, 2007	easy
+Falcons	72	Star_Trek_(film)	data/set4/a8	easy	Who directed the movie Star Trek?	False	False	J. J. Abrams	medium
+Falcons	72	Star_Trek_(film)	data/set4/a8	easy	Who directed the movie Star Trek?	False	False	J. J. Abrams	easy
