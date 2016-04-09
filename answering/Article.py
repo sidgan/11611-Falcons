@@ -1,32 +1,28 @@
 __author__ = 'avnishs'
 
-from collections import Counter
-
 import nltk as nl
+from collections import Counter
 
 
 class Article:
     def __init__(self, article):
-        self.sentences = nl.tokenize.sent_tokenize(article)
+        self.sentences = article
         self.doc_len = dict()
         self.tf = Counter()
         for sentence in self.sentences:
             self.tf.update(sentence.split())
             self.doc_len[sentence] = len(sentence)
 
-            # pprint(self.doc_len)
-            # pprint(self.tf)
-
-    def get_N(self):
+    def get_num_sentences(self):
         return len(self.sentences)
 
-    def get_avg_dlen(self):
+    def get_avg_doclen(self):
         return sum(self.doc_len.values()) / len(self.doc_len)
 
-    def get_dlen(self, sentence):
+    def get_doclen(self, sentence):
         return self.doc_len[sentence]
 
-    def get_tf(self, term):
+    def get_term_freq(self, term):
         if term in self.tf:
             return self.tf[term]
         return 0

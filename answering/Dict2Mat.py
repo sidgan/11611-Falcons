@@ -30,27 +30,3 @@ class Dict2Mat:
 
     def get_dictionary(self):
         return self.dictionary
-
-    def get_next_document(self):
-        for document in self.documents:
-            yield document
-
-'''
-if __name__ == '__main__':
-    sample = [['what', 'nn-nnp', 'location-o'],
-              ['what', 'nn-nnp', 'vb-vbz', 'location-o', 'organization-o']]
-    dic2mat = Dict2Mat()
-    for document in sample:
-        dic2mat.add_document(document)
-
-    print dic2mat.get_doc_term_matrix()
-
-    dictionary = dic2mat.get_dictionary()
-    dic2mat2 = Dict2Mat(False)
-    sample = [['what', 'nn-vb', 'location-o']]
-
-    for document in sample:
-        dic2mat2.add_document(document)
-
-    print dic2mat2.get_doc_term_matrix(dictionary)
-'''
