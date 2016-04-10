@@ -22,6 +22,8 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
+    print 'started'
+
     article = 'data/set2/a7'                # TODO: Should be handled as per requirement!
     article_path = '../' + article + '.txt'
     nlp = English()
@@ -32,12 +34,12 @@ def main(argv=None):
         qc = QuestionClassifier(use_pickle=True)
         qc.train(lines)
 
-    '''
-    with open('../data/qa_classification_te.txt', 'r') as f:
-        lines = f.readlines()
-        acc, pred = qc.test(lines)
-        print 'Testing accuracy was', acc
-    '''
+
+    # with open('../data/qa_classification_te.txt', 'r') as f:
+    #     lines = f.readlines()
+    #     acc, pred = qc.test(lines)
+    #     print 'Testing accuracy was', acc
+
 
     article_sentences = process_article_file(article_path)
     curr_article = Article(article_sentences)
@@ -78,6 +80,7 @@ def main(argv=None):
                 _max = rank_points
 
         print 'Best answer -', answer
+
     print 'done!'
 
 
@@ -171,7 +174,6 @@ def process_text(sentences):
 def bm25_ranker(article, question, k1, b, k3, k):
     """
     Returns list of ranked answers
-
     :param article: article to be searched for
     :param question: question to be answered
     :param k1: BM25 parameter
@@ -205,7 +207,6 @@ def bm25_ranker(article, question, k1, b, k3, k):
 def cos_similarity_ranker(article, question, k):
     """
     Finds the cosine similarity between article sentences and question
-
     :param article: article to be searched for
     :param question: question to be answered
     :param k: Number of answers to be returned
@@ -223,7 +224,6 @@ def cos_similarity_ranker(article, question, k):
 def get_cosine(vec1, vec2):
     """
     Finds the cosine between two vectors
-
     :param vec1: vector 1
     :param vec2: vector 2
     :return: return cosine similarity value

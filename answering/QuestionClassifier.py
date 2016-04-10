@@ -10,7 +10,7 @@ from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
 from sklearn.metrics import accuracy_score, confusion_matrix
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 logger = logging.getLogger('')
 
 
@@ -90,7 +90,7 @@ class QuestionClassifier:
             match = self.PATTERN.match(sentence)
             testing_features.add_document(self.FEATURE_EXTRACTOR.get_question_features(match.group(3)))
             testing_labels.append(self.LABELS.index(match.group(1)))
-            print 'Processed training data-point ' + str(idx + 1)
+            print 'Processed testing data-point ' + str(idx + 1)
 
         print 'Testing: Making predictions'
 
@@ -113,5 +113,4 @@ class QuestionClassifier:
             return None
         testing_features = Dict2Mat(False)
         testing_features.add_document(self.FEATURE_EXTRACTOR.get_question_features(question))
-        predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
-        return self.LABELS[predictions]
+        return self.LABELS[self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))]

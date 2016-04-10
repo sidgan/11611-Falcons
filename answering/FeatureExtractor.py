@@ -6,10 +6,18 @@ import re
 import Queue
 import threading
 import nltk as nl
-from Commons import *
 from itertools import chain
 from spacy.en import English
 from nltk.corpus import wordnet as wn
+
+
+def extract_pos_tags(tagged_sen, q):
+    """
+    Extracts POS tags from the tagged sentence
+    :param tagged_sen: SPACY.IO specific tagged sentence
+    :param q: thread queue
+    """
+    q.put([word.tag_ for word in tagged_sen])
 
 
 class FeatureExtractor:
@@ -17,11 +25,9 @@ class FeatureExtractor:
         self.TAGGER = English()
         self.PATTERN = re.compile(r"(\w+):(\w+) (.+)")
 
-    @staticmethod
-    def extract_wh_word(terms):
+    def extract_wh_word(self, terms):
         """
         Extracts wh words from the terms in question
-
         :param terms: terms of the question sentence
         :return: wh-word from the sentence in lower-case
         """
@@ -31,13 +37,9 @@ class FeatureExtractor:
                 return term
         return [terms[0].lower()]
 
-
-    @staticmethod
-    @deprecated
-    def extract_head(terms):
+    def extract_head(self, terms):
         """
         Extracts head word of the sentence from the terms in question
-
         :param terms: terms of the question sentence
         :return: head word in the question
         """
@@ -84,12 +86,9 @@ class FeatureExtractor:
             if tags[i][1].startswith('NN'):
                 return terms[i]
 
-    @staticmethod
-    @deprecated
-    def extract_word_shape(head_word):
+    def extract_word_shape(self, head_word):
         """
         Extracts the head word's syntactic class - digit? lowercase? etc.
-
         :param head_word: head word of the question
         :return: syntactic class - digits, lower, upper, mixed, other
         """
@@ -105,12 +104,9 @@ class FeatureExtractor:
         else:
             return 'other'
 
-
-    @staticmethod
-    def create_ngrams(terms, n=2):
+    def create_ngrams(self, terms, n=2):
         """
         Creates n-grams from the terms
-
         :param terms: list of terms from which n-grams are to be formed
         :param n: length of the n-gram
         :return: list of n-grams
@@ -122,7 +118,6 @@ class FeatureExtractor:
         """
         Extracts language features like POS n-grams, NER n-grams, WORD-NET term synonyms
         of the terms in the sentence
-
         :param sentence: sentence to be tagged
         :return: Features of sentence including
         """
@@ -132,8 +127,8 @@ class FeatureExtractor:
         q1 = Queue.Queue()
         q2 = Queue.Queue()
 
-        threading.Thread(target=self.create_pos_tags, args=(sentence, q1)).start()
-        threading.Thread(target=self.create_ner_tags, args=(sentence, q2)).start()
+        threading.Thread(target=extract_pos_tags, args=(sentence, q1)).start()
+        threading.Thread(target=self.extract_ner_tags, args=(sentence, q2)).start()
 
         pos_tags = q1.get()
         ner_tags = q2.get()
@@ -156,32 +151,17 @@ class FeatureExtractor:
 
         return rel_cat, rel_ner, rel_pos
 
-    @staticmethod
-    def create_ner_tags(tagged_sen, q):
+    def extract_ner_tags(self, tagged_sen, q):
         """
         Extracts NER tags from the tagged sentence
-
         :param tagged_sen: SPACY.IO specific tagged sentence
         :param q: thread queue
         """
         q.put([word.ent_type_ for word in tagged_sen])
 
-    @staticmethod
-    def create_pos_tags(tagged_sen, q):
-        """
-        Extracts POS tags from the tagged sentence
-
-        :param tagged_sen: SPACY.IO specific tagged sentence
-        :param q: thread queue
-        """
-        q.put([word.tag_ for word in tagged_sen])
-
-    @staticmethod
-    @deprecated
     def create_wh_term_priors(self, wh_term):
         """
         Extract prior probabilities of the wh-terms
-
         :param wh_term: term for which probability is to be found
         """
         with open('qa_classification_pr.txt','r') as f:
@@ -193,7 +173,6 @@ class FeatureExtractor:
     def get_question_features(self, sentence):
         """
         Creates a list of features used by the question classifier
-
         :param sentence: question for which features are to be created
         :return: feature list - ['Wh-word', 'word-net category', 'NER unigrams', 'POS unigrams',
                                 'NER bigrams', 'POS bigrams']
