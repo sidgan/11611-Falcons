@@ -47,7 +47,7 @@ def main(argv=None):
     sample_qa = get_qa_by_path(article)
 
     for idx, qa in enumerate(sample_qa):
-        if idx % 2 == 1:                    # TODO: Change this when submitting code!
+        if idx % 2 == 1:                    # TODO: Change this when submitting code
             continue
 
         question, answer = qa
