@@ -1,15 +1,17 @@
 __author__ = 'avnishs'
 
-import Queue
 import re
-import pickle
+import logging
 import numpy as np
 from sklearn import linear_model
-from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.externals import joblib
 from collections import Counter
 from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logger = logging.getLogger('')
 
 
 class QuestionClassifier:
@@ -24,29 +26,31 @@ class QuestionClassifier:
         self.USE_PICKLE = use_pickle
         self.FEATURE_EXTRACTOR = FeatureExtractor()
         if self.USE_PICKLE:
-            print 'Loading pickled model'
+            logger.debug('Loading pickled model')
+
             self.MODEL = joblib.load('../data/q_classifier.pkl')
             self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
 
+            logger.debug('Model loaded successfully')
+
     def train(self, training_set):
-        if self.USE_PICKLE:
-            print 'Pickled model was loaded'
-        else:
-            print 'Training: Extracting Features...'
-            q = Queue.Queue()
+        """
+        Run training on the training corpus of labelled questions
+        :param training_set: set of labelled questions
+        """
+        if not self.USE_PICKLE:
+            logger.debug('Training: Extracting Features...')
+
             training_features = Dict2Mat()
             training_labels = list()
-            count = 0
-            for sentence in training_set:
-                count += 1
-                match = self.PATTERN.match(sentence)
-                # threading.Thread(target=fe.extract_features, args = (match.group(3),q)).start()
-                training_features.add_document(self.FEATURE_EXTRACTOR.extract_features(match.group(3)))
-                training_labels.append(self.LABELS.index(match.group(1)))
-                print 'datapoint ' + str(count)
 
-            # q.join()
-            # map(lambda item:training_features.add_document(item),q)
+            for idx, sentence in enumerate(training_set):
+                match = self.PATTERN.match(sentence)
+                training_features.add_document(self.FEATURE_EXTRACTOR.get_question_features(match.group(3)))
+                training_labels.append(self.LABELS.index(match.group(1)))
+                logger.debug('Processed training data-point ' + str(idx + 1))
+
+            # Train a one-vs-one logistic regression model with class weights to overcome class imbalance
             self.MODEL = linear_model.LogisticRegression(n_jobs=4, class_weight='balanced',
                                                          multi_class='multinomial', solver='newton-cg')
             # self.MODEL = tree.DecisionTreeClassifier()
@@ -56,38 +60,58 @@ class QuestionClassifier:
             #                                              multi_class='multinomial', solver='newton-cg'))
             # self.MODEL = BaggingClassifier(base_estimator=AdaBoostClassifier(base_estimator=tree.DecisionTreeClassifier(), n_estimators=20))
             self.FEATURE_TEMPLATE = training_features.get_dictionary()
-            print 'Training: Preparing Model'
+
+            logger.debug('Training: Fitting model')
+
             self.MODEL.fit(training_features.get_doc_term_matrix(), np.array(training_labels))
+
+            logger.debug('Training: Dumping fitted model and dictionary into pickle file')
 
             joblib.dump(self.FEATURE_TEMPLATE, "../data/feature_dict.pkl")
             joblib.dump(self.MODEL, "../data/q_classifier.pkl")
 
-            print 'Training: Complete'
+            logger.debug('Training: Completed')
 
     def test(self, testing_set):
-        print 'Testing: Extracting Features...'
+        """
+        Run testing on the testing corpus of labelled questions
+        :param testing_set: set of test questions
+        """
         if self.MODEL is None:
-            print "Call the train function first!"
+            logger.error('Error: Call the train function first!')
             exit()
-        count = 0
+
+        print 'Testing: Extracting Features...'
+
         testing_features = Dict2Mat(False)
         testing_labels = list()
-        for sentence in testing_set:
-            count += 1
+
+        for idx, sentence in enumerate(testing_set):
             match = self.PATTERN.match(sentence)
-            testing_features.add_document(self.FEATURE_EXTRACTOR.extract_features(match.group(3)))
+            testing_features.add_document(self.FEATURE_EXTRACTOR.get_question_features(match.group(3)))
             testing_labels.append(self.LABELS.index(match.group(1)))
-            print 'datapoint ' + str(count)
+            print 'Processed training data-point ' + str(idx + 1)
+
         print 'Testing: Making predictions'
+
         predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
+
         print 'Testing: Complete'
-        print Counter(map(lambda i:self.LABELS[i],predictions))
-        print confusion_matrix(testing_labels, predictions)
+
+        logger.debug(Counter(map(lambda i: self.LABELS[i], predictions)))
+        logger.debug(confusion_matrix(testing_labels, predictions))
         return accuracy_score(testing_labels, predictions), predictions
 
     def predict(self, question):
+        """
+        Predicts the label for the question
+        :param question: question for which label is to be predicted
+        :return: prediction label
+        """
         if self.MODEL is None:
-            print "Call the train function first!"
+            logger.error('Call the train function first!')
             return None
-        fe = FeatureExtractor()
-        return self.LABELS[self.MODEL.predict(fe.extract_features(question))]
+        testing_features = Dict2Mat(False)
+        testing_features.add_document(self.FEATURE_EXTRACTOR.get_question_features(question))
+        predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
+        return self.LABELS[predictions]
