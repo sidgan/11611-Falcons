@@ -81,7 +81,6 @@ class QuestionClassifier:
         print 'Testing: Making predictions'
         predictions = self.MODEL.predict(testing_features.get_doc_term_matrix(self.FEATURE_TEMPLATE))
         print 'Testing: Complete'
-        print predictions
         print Counter(map(lambda i:self.LABELS[i],predictions))
         print confusion_matrix(testing_labels, predictions)
         return accuracy_score(testing_labels, predictions), predictions
