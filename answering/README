@@ -15,5 +15,7 @@ Possible issue you may face: -
     pip install -r requirements.txt
     python -m spacy.en.download         <- Takes about 5 minutes to download
 
+2. On a windows system, please change the shebang path in `answer' to correct python binary.
+
 If any issue persists, please let the authors know.
 
