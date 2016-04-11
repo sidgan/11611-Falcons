@@ -1,5 +1,3 @@
-__author__ = 'avnishs'
-
 import re
 import logging
 import numpy as np
@@ -9,6 +7,9 @@ from collections import Counter
 from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
 from sklearn.metrics import accuracy_score, confusion_matrix
+
+__author__ = 'avnishs'
+
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 logger = logging.getLogger('')

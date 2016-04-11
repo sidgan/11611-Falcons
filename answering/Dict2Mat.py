@@ -1,7 +1,7 @@
-__author__ = 'pbamotra'
-
 import gensim
 from gensim import corpora
+
+__author__ = 'pbamotra'
 
 
 class Dict2Mat:

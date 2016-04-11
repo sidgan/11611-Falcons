@@ -1,6 +1,14 @@
+import re
+import time
+import warnings
+from spacy.en import English
+
 __author__ = 'pbamotra'
 
-import warnings
+nlp = English()
+WORD = re.compile(r'\w+')
+IS_PRODUCTION_MODE = False
+CANDIDATE_THRESHOLD = 10
 
 
 def deprecated(func):
@@ -11,8 +19,9 @@ def deprecated(func):
     """
 
     def new_func(*args, **kwargs):
-        warnings.simplefilter('always', DeprecationWarning)   # turn off filter
-        warnings.warn("Call to deprecated function {}.".format(func.__name__), category=DeprecationWarning, stacklevel=2)
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn("Call to deprecated function {}.".format(func.__name__), category=DeprecationWarning,
+                      stacklevel=2)
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
 
@@ -20,3 +29,16 @@ def deprecated(func):
     new_func.__doc__ = func.__doc__
     new_func.__dict__.update(func.__dict__)
     return new_func
+
+
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        print '%r (%r, %r) %2.2f sec' % \
+              (method.__name__, args, kw, te - ts)
+        return result
+
+    return timed

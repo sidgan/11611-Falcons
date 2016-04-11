@@ -1,20 +1,17 @@
 from __future__ import unicode_literals
-
-__author__ = 'avnishs'
-
-import re
 import Queue
 import threading
 import nltk as nl
+from Commons import *
 from itertools import chain
-from spacy.en import English
 from nltk.corpus import wordnet as wn
 
+__author__ = 'avnishs'
 
 
 class FeatureExtractor:
     def __init__(self):
-        self.TAGGER = English()
+        self.TAGGER = nlp
         self.PATTERN = re.compile(r"(\w+):(\w+) (.+)")
 
     def extract_wh_word(self, terms):
@@ -23,7 +20,7 @@ class FeatureExtractor:
         :param terms: terms of the question sentence
         :return: wh-word from the sentence in lower-case
         """
-        wh_list = ['whose', 'when', 'where', 'why', 'how', 'what', 'who', 'which','whom']
+        wh_list = ['whose', 'when', 'where', 'why', 'how', 'what', 'who', 'which', 'whom']
         for term in terms[::-1]:
             if term.lower() in wh_list:
                 return term
@@ -164,7 +161,7 @@ class FeatureExtractor:
         Extract prior probabilities of the wh-terms
         :param wh_term: term for which probability is to be found
         """
-        with open('qa_classification_pr.txt','r') as f:
+        with open('qa_classification_pr.txt', 'r') as f:
             lines = f.readlines()
 
         for line in lines:

@@ -5,9 +5,8 @@ import sys
 import math
 import operator
 import unicodedata
-import numpy as np
 from CoreferenceResolver import *
-from spacy.en import English
+from Commons import *
 from Article import Article
 from itertools import chain
 from textblob import TextBlob
@@ -15,13 +14,10 @@ from collections import Counter
 from collections import defaultdict
 from QuestionClassifier import QuestionClassifier
 
-
 WORD = re.compile(r'\w+')
-nlp = English()
 
 
 def main(argv=None):
-
     if argv is None:
         argv = sys.argv
 
@@ -40,12 +36,12 @@ def main(argv=None):
     total_acc = 0.0
     count = 0
     for idx in range(1, 11):
-        article = 'data/set2/a'+`idx`                # TODO: Should be handled as per requirement!
+        article = 'data/set2/a' + `idx`  # TODO: Should be handled as per requirement!
         article_path = '../' + article + '.txt'
 
         print article
 
-        questions,ground_truth_answers = get_qa_by_path(article)
+        questions, ground_truth_answers = get_qa_by_path(article)
         if len(ground_truth_answers) == 0:
             continue
 
@@ -53,20 +49,20 @@ def main(argv=None):
         curr_article = Article(article_sentences)
 
         count += 1
-        print '-'*100
-        predicted_answers = generate_answers(questions,curr_article,qc)
-        print '-'*100
-        answering_acc = evaluate_answers(predicted_answers,ground_truth_answers)
-        print '~'*100
+        print '-' * 100
+        predicted_answers = generate_answers(questions, curr_article, qc)
+        print '-' * 100
+        answering_acc = evaluate_answers(predicted_answers, ground_truth_answers)
+        print '~' * 100
         print 'Accuracy = ' + str(answering_acc)
         total_acc += answering_acc
 
-    print '='*100
-    print 'Average Accuracy = ' + str(total_acc/float(count))
+    print '=' * 100
+    print 'Average Accuracy = ' + str(total_acc / float(count))
     print 'done!'
 
 
-def evaluate_answers(predicted_answers,ground_truth_answers):
+def evaluate_answers(predicted_answers, ground_truth_answers):
     total_score = 0.0
     i = 0.0
     for i in range(len(predicted_answers)):
@@ -84,10 +80,11 @@ def evaluate_answers(predicted_answers,ground_truth_answers):
 
             if count == len(ans_terms):
                 score += 1.0
-        print str(score)," | ",actual_answer," | ",predicted_answer
+        print str(score), " | ", actual_answer, " | ", predicted_answer
         total_score += score
 
-    return total_score/float(i+1)
+    return total_score / float(i + 1)
+
 
 def generate_answers(sample_qa, curr_article, qc):
     candidate_threshold = 10
@@ -112,11 +109,11 @@ def generate_answers(sample_qa, curr_article, qc):
 
         alpha = 1
         for ans, score in res_bm25.iteritems():
-            res_bm25[ans] = (score/float(max_score))*alpha
+            res_bm25[ans] = (score / float(max_score)) * alpha
             if ans in res_cos:
-                res_bm25[ans] += (res_cos[ans])*(1-alpha)
+                res_bm25[ans] += (res_cos[ans]) * (1 - alpha)
 
-        res = sorted(res_bm25.items(), key=operator.itemgetter(1),reverse=True)
+        res = sorted(res_bm25.items(), key=operator.itemgetter(1), reverse=True)
 
         rank = 1
         for (candidate_bm25, score_bm25) in res:
@@ -136,6 +133,7 @@ def generate_answers(sample_qa, curr_article, qc):
         predicted_answers.append(predicted_answer)
 
     return predicted_answers
+
 
 def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag):
     """
@@ -160,7 +158,8 @@ def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag)
     ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
 
     # TODO: this formula needs tuning
-    return (bm25_score) + 0.25*(ner_score/float(len(ner_tags)))
+    return (bm25_score) + 0.25 * (ner_score / float(len(ner_tags)))
+
 
 def get_qa_by_path(base_path):
     """
@@ -175,7 +174,8 @@ def get_qa_by_path(base_path):
             r = row.split('\t')
             if r[3] == base_path:
                 questions_answers[r[5]] = r[8]
-    return questions_answers.keys(),questions_answers.values()
+    return questions_answers.keys(), questions_answers.values()
+
 
 def process_article_file(filename, nlp):
     """
@@ -192,9 +192,10 @@ def process_article_file(filename, nlp):
 
     sentences = filter(lambda sent: (len(sent.word_counts) > 5) and '.' in sent.tokens,
                        list(chain.from_iterable(result)))
-    #normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
-    #sentences = map(normalize_string, sentences)
+    # normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
+    # sentences = map(normalize_string, sentences)
     return sentences
+
 
 def process_text(sentences):
     """
@@ -210,6 +211,7 @@ def process_text(sentences):
             continue
         new_sen.append(s)
     return new_sen
+
 
 def bm25_ranker(article, question, k1, b, k3, k):
     """
@@ -243,6 +245,7 @@ def bm25_ranker(article, question, k1, b, k3, k):
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
 
+
 def cos_similarity_ranker(article, question, k):
     """
     Finds the cosine similarity between article sentences and question
@@ -258,6 +261,7 @@ def cos_similarity_ranker(article, question, k):
         line2score[sentence] = get_cosine(text_to_vector(question), text_to_vector(sentence))
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
+
 
 def get_cosine(vec1, vec2):
     """
@@ -278,6 +282,7 @@ def get_cosine(vec1, vec2):
     else:
         return float(numerator) / denominator
 
+
 def text_to_vector(text):
     """
     Converts text vector containing counts
@@ -287,6 +292,7 @@ def text_to_vector(text):
     """
     words = WORD.findall(str(text))
     return Counter(words)
+
 
 if __name__ == '__main__':
     main()

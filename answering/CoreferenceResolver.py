@@ -1,9 +1,9 @@
+from math import *
+
 __author__ = 'avnishs'
 
-from spacy.en import English
-from scipy.stats import norm
-
 noun_dict = dict()
+
 
 def resolve_coreference(para, nlp):
     terms = nlp(u"{}".format(para))
@@ -18,9 +18,9 @@ def resolve_coreference(para, nlp):
         elif tag.startswith("PRP"):
             max_sim = 0.0
             best_term = None
-            for (noun,pos) in noun_dict.iteritems():
+            for (noun, pos) in noun_dict.iteritems():
                 sim = similarity(term, noun, idx, pos)
-                if(sim > max_sim):
+                if sim > max_sim:
                     max_sim = sim
                     best_term = noun
             result += str(best_term)
@@ -33,11 +33,18 @@ def resolve_coreference(para, nlp):
 
     return result
 
+
+def normpdf(x, mu, sigma):
+    u = (x - mu) / abs(sigma)
+    y = (1 / (sqrt(2 * pi) * abs(sigma))) * exp(-u * u / 2)
+    return y
+
+
 def similarity(pronoun, noun, idx, noun_pos):
-    mean = (idx - 15)/float(2)
-    score = noun.similarity(pronoun) + norm.pdf(noun_pos,mean,(idx-mean)*0.68)
+    mean = (idx - 15) / float(2)
+    score = noun.similarity(pronoun) + normpdf(noun_pos, mean, (idx - mean) * 0.68)
     return score
 
-# print resolve_coreference("Ophiuchus is located between Aquila , Serpens and Hercules , northwest of the center of the "
-#                           "Milky Way . The southern part lies between Scorpius to the west and Sagittarius to the east . "
-#                           "In the northern hemisphere , it is best visible in summer .")
+    # print resolve_coreference("Ophiuchus is located between Aquila , Serpens and Hercules , northwest of the center of the "
+    # "Milky Way . The southern part lies between Scorpius to the west and Sagittarius to the east . "
+    #                           "In the northern hemisphere , it is best visible in summer .")

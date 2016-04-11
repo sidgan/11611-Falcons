@@ -1,7 +1,6 @@
-__author__ = 'avnishs'
-
-import nltk as nl
 from collections import Counter
+
+__author__ = 'avnishs'
 
 
 class Article:
