@@ -182,7 +182,8 @@ def generate_answers(questions_list, article, qc):
 
             rank += 1
 
-        logger.debug('Best answer ' + predicted_answer)
+        logger.debug('Best answer :-')
+        logger.debug(predicted_answer)
         predicted_answers.append(predicted_answer)
 
     return predicted_answers
