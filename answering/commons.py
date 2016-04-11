@@ -1,5 +1,6 @@
 import re
 import time
+import logging
 import warnings
 from spacy.en import English
 
@@ -12,6 +13,7 @@ IS_PRODUCTION_MODE = True
 # ------------------------------------------------------------------------------------------- #
 CANDIDATE_THRESHOLD = 10
 USE_PICKLE = True
+VERBOSITY = logging.DEBUG
 
 
 def deprecated(func):

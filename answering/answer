@@ -18,7 +18,7 @@ from QuestionClassifier import QuestionClassifier
 __author__ = 'avnishs, pbamotra'
 
 WORD = re.compile(r'\w+')
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=VERBOSITY)
 logger = logging.getLogger('')
 
 

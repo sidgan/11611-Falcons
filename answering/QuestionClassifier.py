@@ -1,17 +1,18 @@
 import re
 import logging
 import numpy as np
+from Commons import *
+from Dict2Mat import Dict2Mat
+from collections import Counter
 from sklearn import linear_model
 from sklearn.externals import joblib
-from collections import Counter
-from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
 from sklearn.metrics import accuracy_score, confusion_matrix
 
 __author__ = 'avnishs'
 
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=VERBOSITY)
 logger = logging.getLogger('')
 
 
