@@ -45,49 +45,82 @@ def main(argv=None):
     curr_article = Article(article_sentences)
 
     sample_qa = get_qa_by_path(article)
+    answering_score = 0.0
 
     for idx, qa in enumerate(sample_qa):
         if idx % 2 == 1:                    # TODO: Change this when submitting code
             continue
 
-        question, answer = qa
+        question, actual_answer = qa
         print '=' * 100
         q_tag = qc.predict(process_text([question])[0])
+        actual_answer = process_text([actual_answer])[0]
 
         print 'Ques.', question, '\t', 'Classified as', q_tag
-        print 'Ans. ', answer
+        print 'Ans. ', actual_answer
 
         print '-' * 100
 
         print 'Candidate answer sentences'
 
         _max = -sys.maxint - 1
-        answer = None
+        predicted_answer = None
         processed_q = nlp(u"{}".format(question))
 
         # TODO: Currently comparing results from both BM25 and cosine similarity, change this later!
 
-        for ((idx_c, (candidate, score)), (idx_cos, (candidate2, score2))) \
-                in zip(enumerate(bm25_ranker(curr_article, question, 1.2, 0.75, 0, candidate_threshold)),
-                       enumerate(cos_similarity_ranker(curr_article, question, candidate_threshold))):
-            rank_points = get_points(score, idx_c + 1, candidate_threshold, nlp(u'{}'.format(candidate)),
+        res_bm25 = (bm25_ranker(curr_article, question, 1.2, 0.75, 0, candidate_threshold))
+        # res_cos = dict(cos_similarity_ranker(curr_article, question, candidate_threshold))
+        #
+        # max_score = 1 #res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
+        #
+        # alpha = 1
+        #
+        # for ans, score in res_bm25.iteritems():
+        #     res_bm25[ans] = (score/float(max_score))*alpha
+        #     if ans in res_cos:
+        #         res_bm25[ans] += (res_cos[ans])*(1-alpha)
+        #
+        # res = sorted(res_bm25.items(), key=operator.itemgetter(0))
+        rank = 1
+        for (candidate_bm25, score_bm25) in res_bm25:
+
+            rank_points = get_points(score_bm25, rank, candidate_threshold, nlp(u'{}'.format(candidate_bm25)),
                                      processed_q, q_tag)
 
-            print idx_c, candidate, score, rank_points
+            print rank, candidate_bm25, score_bm25, rank_points
             # print idx_cos, candidate2, score2
             if rank_points > _max:
-                answer = candidate
+                predicted_answer = candidate_bm25
                 _max = rank_points
 
-        print 'Best answer -', answer
+            rank += 1
 
+        print 'Best answer -', predicted_answer
+
+        score = 0.0
+        if actual_answer in predicted_answer:
+            score = 10.0
+        else:
+            ans_terms = actual_answer.split()
+            denom = len(ans_terms)
+            count = 0
+            for term in ans_terms:
+                if term in predicted_answer:
+                    count+=1
+
+            if count == denom:
+                score = 10.0
+
+        print score
+        answering_score += score
+
+    print 'accuracy = ' + str(answering_score/(idx*5))
     print 'done!'
-
 
 def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag):
     """
     Used to rank final answer
-
     :param bm25_score: BM25 score
     :param rank: BM25 rank
     :param candidate_threshold: number of BM25 results
@@ -100,24 +133,15 @@ def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag)
                'NUM': {'DATE', 'TIME', 'PERCENT', 'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL'},
                'DESC': {'ALL'},
                'HUM': {'PERSON'},
-               'ENTY': {'NORP', 'FACILITY', 'ORG'},
+               'ENTY': {'NORP', 'FACILITY', 'ORG', 'PERSON'},
                'ABBR': {'ALL'}}
 
     possible_tags = ner_map[q_tag]
-
-    ner_match_contribution = 1.25
-    word_match_contribution = 1.75
-
-    ner_score = sum(map(lambda tag: ner_match_contribution if tag in possible_tags else 0,
-                        [str(word.ent_type_) for word in spacy_candidate]))
-
-    answer_words = {str(_word.lemma_).strip() for _word in spacy_candidate}
-    term_match = sum(map(lambda w: word_match_contribution if w in answer_words else 0,
-                         [str(ques_word.lemma_) for ques_word in q]))
+    ner_tags = [str(word.ent_type_) for word in spacy_candidate]
+    ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
 
     # TODO: this formula needs tuning
-    return (bm25_score / float(rank)) + ner_score + term_match
-
+    return (bm25_score / float(rank)) + ner_score
 
 def get_qa_by_path(base_path):
     """
@@ -133,7 +157,6 @@ def get_qa_by_path(base_path):
             if r[3] == base_path:
                 questions_answers.append((r[5], r[8]))
     return questions_answers
-
 
 def process_article_file(filename):
     """
@@ -153,11 +176,9 @@ def process_article_file(filename):
     sentences = map(normalize_string, sentences)
     return sentences
 
-
 def process_text(sentences):
     """
     Processes sentences to cleaner form
-
     :param sentences: list of sentence
     :return: processes texts
     """
@@ -169,7 +190,6 @@ def process_text(sentences):
             continue
         new_sen.append(s)
     return new_sen
-
 
 def bm25_ranker(article, question, k1, b, k3, k):
     """
@@ -203,7 +223,6 @@ def bm25_ranker(article, question, k1, b, k3, k):
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
 
-
 def cos_similarity_ranker(article, question, k):
     """
     Finds the cosine similarity between article sentences and question
@@ -219,7 +238,6 @@ def cos_similarity_ranker(article, question, k):
         line2score[sentence] = get_cosine(text_to_vector(question), text_to_vector(sentence))
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
-
 
 def get_cosine(vec1, vec2):
     """
@@ -240,7 +258,6 @@ def get_cosine(vec1, vec2):
     else:
         return float(numerator) / denominator
 
-
 def text_to_vector(text):
     """
     Converts text vector containing counts
@@ -250,7 +267,6 @@ def text_to_vector(text):
     """
     words = WORD.findall(text)
     return Counter(words)
-
 
 if __name__ == '__main__':
     main()
