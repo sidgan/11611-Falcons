@@ -6,6 +6,7 @@ import math
 import operator
 import unicodedata
 import numpy as np
+from CoreferenceResolver import *
 from spacy.en import English
 from Article import Article
 from itertools import chain
@@ -22,7 +23,7 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    print 'started'
+    print 'Started'
 
     article = 'data/set2/a7'                # TODO: Should be handled as per requirement!
     article_path = '../' + article + '.txt'
@@ -41,7 +42,7 @@ def main(argv=None):
     #     print 'Testing accuracy was', acc
 
 
-    article_sentences = process_article_file(article_path)
+    article_sentences = process_article_file(article_path, nlp)
     curr_article = Article(article_sentences)
 
     sample_qa = get_qa_by_path(article)
@@ -54,7 +55,8 @@ def main(argv=None):
         question, actual_answer = qa
         print '=' * 100
         q_tag = qc.predict(process_text([question])[0])
-        actual_answer = process_text([actual_answer])[0]
+        ptext = process_text([actual_answer])[0]
+        actual_answer = str(nlp(u"{}".format(ptext)).text)
 
         print 'Ques.', question, '\t', 'Classified as', q_tag
         print 'Ans. ', actual_answer
@@ -69,21 +71,21 @@ def main(argv=None):
 
         # TODO: Currently comparing results from both BM25 and cosine similarity, change this later!
 
-        res_bm25 = (bm25_ranker(curr_article, question, 1.2, 0.75, 0, candidate_threshold))
-        # res_cos = dict(cos_similarity_ranker(curr_article, question, candidate_threshold))
-        #
-        # max_score = 1 #res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
-        #
-        # alpha = 1
-        #
-        # for ans, score in res_bm25.iteritems():
-        #     res_bm25[ans] = (score/float(max_score))*alpha
-        #     if ans in res_cos:
-        #         res_bm25[ans] += (res_cos[ans])*(1-alpha)
-        #
-        # res = sorted(res_bm25.items(), key=operator.itemgetter(0))
+        res_bm25 = dict(bm25_ranker(curr_article, question, 1.2, 0.75, 0, candidate_threshold))
+        res_cos = dict(cos_similarity_ranker(curr_article, question, candidate_threshold))
+
+        max_score = res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
+
+        alpha = 8.0
+        for ans, score in res_bm25.iteritems():
+            res_bm25[ans] = (score)*alpha
+            if ans in res_cos:
+                res_bm25[ans] += (res_cos[ans])*(1-alpha)*float(max_score)
+
+        res = sorted(res_bm25.items(), key=operator.itemgetter(1),reverse=True)
+
         rank = 1
-        for (candidate_bm25, score_bm25) in res_bm25:
+        for (candidate_bm25, score_bm25) in res:
 
             rank_points = get_points(score_bm25, rank, candidate_threshold, nlp(u'{}'.format(candidate_bm25)),
                                      processed_q, q_tag)
@@ -141,7 +143,7 @@ def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag)
     ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
 
     # TODO: this formula needs tuning
-    return (bm25_score / float(rank)) + ner_score
+    return (bm25_score / float(rank)) + 0.25*ner_score
 
 def get_qa_by_path(base_path):
     """
@@ -158,7 +160,7 @@ def get_qa_by_path(base_path):
                 questions_answers.append((r[5], r[8]))
     return questions_answers
 
-def process_article_file(filename):
+def process_article_file(filename, nlp):
     """
     Process articles by removing irrelevant sentences and removing non-ascii characters
 
@@ -168,12 +170,13 @@ def process_article_file(filename):
     result = list()
     with open(filename, 'r') as article:
         for line in article:
-            result.append(TextBlob(line.decode('utf-8')).sentences)
+            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+            result.append(TextBlob(resolve_coreference(cleaned, nlp)).sentences)
 
     sentences = filter(lambda sent: (len(sent.word_counts) > 5) and '.' in sent.tokens,
                        list(chain.from_iterable(result)))
-    normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
-    sentences = map(normalize_string, sentences)
+    #normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
+    #sentences = map(normalize_string, sentences)
     return sentences
 
 def process_text(sentences):
@@ -265,7 +268,7 @@ def text_to_vector(text):
     :param text: text to be converted into a vector
     :return: returns vector of counts
     """
-    words = WORD.findall(text)
+    words = WORD.findall(str(text))
     return Counter(words)
 
 if __name__ == '__main__':

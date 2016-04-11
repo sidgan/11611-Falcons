@@ -11,14 +11,6 @@ from spacy.en import English
 from nltk.corpus import wordnet as wn
 
 
-def extract_pos_tags(tagged_sen, q):
-    """
-    Extracts POS tags from the tagged sentence
-    :param tagged_sen: SPACY.IO specific tagged sentence
-    :param q: thread queue
-    """
-    q.put([word.tag_ for word in tagged_sen])
-
 
 class FeatureExtractor:
     def __init__(self):
@@ -127,7 +119,7 @@ class FeatureExtractor:
         q1 = Queue.Queue()
         q2 = Queue.Queue()
 
-        threading.Thread(target=extract_pos_tags, args=(sentence, q1)).start()
+        threading.Thread(target=self.extract_pos_tags, args=(sentence, q1)).start()
         threading.Thread(target=self.extract_ner_tags, args=(sentence, q2)).start()
 
         pos_tags = q1.get()
@@ -158,6 +150,14 @@ class FeatureExtractor:
         :param q: thread queue
         """
         q.put([word.ent_type_ for word in tagged_sen])
+
+    def extract_pos_tags(self, tagged_sen, q):
+        """
+        Extracts POS tags from the tagged sentence
+        :param tagged_sen: SPACY.IO specific tagged sentence
+        :param q: thread queue
+        """
+        q.put([word.tag_ for word in tagged_sen])
 
     def create_wh_term_priors(self, wh_term):
         """
