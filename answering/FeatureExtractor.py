@@ -10,6 +10,9 @@ __author__ = 'avnishs'
 
 
 class FeatureExtractor:
+    """
+    Builds the feature vector for question classification
+    """
     def __init__(self):
         self.TAGGER = nlp
         self.PATTERN = re.compile(r"(\w+):(\w+) (.+)")

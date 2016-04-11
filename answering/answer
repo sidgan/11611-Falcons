@@ -6,16 +6,16 @@ import math
 import logging
 import operator
 import unicodedata
-from CoreferenceResolver import *
 from Commons import *
 from Article import Article
 from itertools import chain
 from textblob import TextBlob
 from collections import Counter
+from CoreferenceResolver import *
 from collections import defaultdict
 from QuestionClassifier import QuestionClassifier
 
-__author__ = 'avnishs'
+__author__ = 'avnishs, pbamotra'
 
 WORD = re.compile(r'\w+')
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
@@ -157,8 +157,6 @@ def generate_answers(questions_list, article, qc):
         _max = -sys.maxint - 1
         predicted_answer = None
         processed_question = nlp(u"{}".format(question))
-
-        # TODO: Currently comparing results from both BM25 and cosine similarity, change this later!
 
         res_bm25 = dict(bm25_ranker(article, question, 1.2, 0.75, 0, candidate_threshold))
         res_cos = dict(cos_similarity_ranker(article, question, candidate_threshold))

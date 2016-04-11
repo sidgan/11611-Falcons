@@ -35,6 +35,11 @@ def deprecated(func):
 
 
 def timeit(method):
+    """
+    Used as a decorator to time a method
+
+    :param method: method to be timed
+    """
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
