@@ -17,53 +17,87 @@ from QuestionClassifier import QuestionClassifier
 
 
 WORD = re.compile(r'\w+')
+nlp = English()
 
 
 def main(argv=None):
+
     if argv is None:
         argv = sys.argv
 
     print 'Started'
-
-    article = 'data/set2/a7'                # TODO: Should be handled as per requirement!
-    article_path = '../' + article + '.txt'
-    nlp = English()
-    candidate_threshold = 10
 
     with open('../data/qa_classification_tr.txt', 'r') as f:
         lines = f.readlines()
         qc = QuestionClassifier(use_pickle=True)
         qc.train(lines)
 
-
     # with open('../data/qa_classification_te.txt', 'r') as f:
     #     lines = f.readlines()
     #     acc, pred = qc.test(lines)
     #     print 'Testing accuracy was', acc
 
+    total_acc = 0.0
+    count = 0
+    for idx in range(1, 11):
+        article = 'data/set2/a'+`idx`                # TODO: Should be handled as per requirement!
+        article_path = '../' + article + '.txt'
 
-    article_sentences = process_article_file(article_path, nlp)
-    curr_article = Article(article_sentences)
+        print article
 
-    sample_qa = get_qa_by_path(article)
-    answering_score = 0.0
-
-    for idx, qa in enumerate(sample_qa):
-        if idx % 2 == 1:                    # TODO: Change this when submitting code
+        questions,ground_truth_answers = get_qa_by_path(article)
+        if len(ground_truth_answers) == 0:
             continue
 
-        question, actual_answer = qa
-        print '=' * 100
+        article_sentences = process_article_file(article_path, nlp)
+        curr_article = Article(article_sentences)
+
+        count += 1
+        print '-'*100
+        predicted_answers = generate_answers(questions,curr_article,qc)
+        print '-'*100
+        answering_acc = evaluate_answers(predicted_answers,ground_truth_answers)
+        print '~'*100
+        print 'Accuracy = ' + str(answering_acc)
+        total_acc += answering_acc
+
+    print '='*100
+    print 'Average Accuracy = ' + str(total_acc/float(count))
+    print 'done!'
+
+
+def evaluate_answers(predicted_answers,ground_truth_answers):
+    total_score = 0.0
+    i = 0.0
+    for i in range(len(predicted_answers)):
+        score = 0.0
+        actual_answer = str(nlp(u"{}".format(process_text([ground_truth_answers[i]])[0])).text).lower()
+        predicted_answer = predicted_answers[i].lower()
+        if actual_answer in predicted_answer:
+            score += 1.0
+        else:
+            ans_terms = actual_answer.split()
+            count = 0
+            for term in ans_terms:
+                if term in predicted_answer:
+                    count += 1
+
+            if count == len(ans_terms):
+                score += 1.0
+        print str(score)," | ",actual_answer," | ",predicted_answer
+        total_score += score
+
+    return total_score/float(i+1)
+
+def generate_answers(sample_qa, curr_article, qc):
+    candidate_threshold = 10
+    predicted_answers = list()
+
+    for question in sample_qa:
         q_tag = qc.predict(process_text([question])[0])
-        ptext = process_text([actual_answer])[0]
-        actual_answer = str(nlp(u"{}".format(ptext)).text)
 
-        print 'Ques.', question, '\t', 'Classified as', q_tag
-        print 'Ans. ', actual_answer
-
-        print '-' * 100
-
-        print 'Candidate answer sentences'
+        print 'Ques.', question, ' | ', 'Classified as', q_tag
+        # print 'Ans. ', actual_answer
 
         _max = -sys.maxint - 1
         predicted_answer = None
@@ -76,11 +110,11 @@ def main(argv=None):
 
         max_score = res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
 
-        alpha = 8.0
+        alpha = 1
         for ans, score in res_bm25.iteritems():
-            res_bm25[ans] = (score)*alpha
+            res_bm25[ans] = (score/float(max_score))*alpha
             if ans in res_cos:
-                res_bm25[ans] += (res_cos[ans])*(1-alpha)*float(max_score)
+                res_bm25[ans] += (res_cos[ans])*(1-alpha)
 
         res = sorted(res_bm25.items(), key=operator.itemgetter(1),reverse=True)
 
@@ -90,7 +124,7 @@ def main(argv=None):
             rank_points = get_points(score_bm25, rank, candidate_threshold, nlp(u'{}'.format(candidate_bm25)),
                                      processed_q, q_tag)
 
-            print rank, candidate_bm25, score_bm25, rank_points
+            # print rank, candidate_bm25, score_bm25, rank_points
             # print idx_cos, candidate2, score2
             if rank_points > _max:
                 predicted_answer = candidate_bm25
@@ -98,27 +132,10 @@ def main(argv=None):
 
             rank += 1
 
-        print 'Best answer -', predicted_answer
+        # print 'Best answer -', predicted_answer
+        predicted_answers.append(predicted_answer)
 
-        score = 0.0
-        if actual_answer in predicted_answer:
-            score = 10.0
-        else:
-            ans_terms = actual_answer.split()
-            denom = len(ans_terms)
-            count = 0
-            for term in ans_terms:
-                if term in predicted_answer:
-                    count+=1
-
-            if count == denom:
-                score = 10.0
-
-        print score
-        answering_score += score
-
-    print 'accuracy = ' + str(answering_score/(idx*5))
-    print 'done!'
+    return predicted_answers
 
 def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag):
     """
@@ -143,7 +160,7 @@ def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag)
     ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
 
     # TODO: this formula needs tuning
-    return (bm25_score / float(rank)) + 0.25*ner_score
+    return (bm25_score) + 0.25*(ner_score/float(len(ner_tags)))
 
 def get_qa_by_path(base_path):
     """
@@ -153,12 +170,12 @@ def get_qa_by_path(base_path):
     :return: qa pairs for article specified by base_path as a list
     """
     with open('../data/view_team_qnsans.txt') as t_file:
-        questions_answers = list()
+        questions_answers = dict()
         for row in t_file:
             r = row.split('\t')
             if r[3] == base_path:
-                questions_answers.append((r[5], r[8]))
-    return questions_answers
+                questions_answers[r[5]] = r[8]
+    return questions_answers.keys(),questions_answers.values()
 
 def process_article_file(filename, nlp):
     """
