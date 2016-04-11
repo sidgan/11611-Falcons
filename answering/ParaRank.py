@@ -1,5 +1,3 @@
-__author__ = 'avnishs'
-
 import re
 import sys
 import math
@@ -13,6 +11,8 @@ from textblob import TextBlob
 from collections import Counter
 from collections import defaultdict
 from QuestionClassifier import QuestionClassifier
+
+__author__ = 'avnishs'
 
 WORD = re.compile(r'\w+')
 
