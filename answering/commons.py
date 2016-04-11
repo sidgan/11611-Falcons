@@ -7,8 +7,11 @@ __author__ = 'pbamotra'
 
 nlp = English()
 WORD = re.compile(r'\w+')
-IS_PRODUCTION_MODE = False
+# ------------ Controls if the system runs in simulation mode or production mode ------------ #
+IS_PRODUCTION_MODE = True
+# ------------------------------------------------------------------------------------------- #
 CANDIDATE_THRESHOLD = 10
+USE_PICKLE = True
 
 
 def deprecated(func):
@@ -37,8 +40,7 @@ def timeit(method):
         result = method(*args, **kw)
         te = time.time()
 
-        print '%r (%r, %r) %2.2f sec' % \
-              (method.__name__, args, kw, te - ts)
+        print '%r (%r, %r) %2.2f sec' % (method.__name__, args, kw, te - ts)
         return result
 
     return timed
