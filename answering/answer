@@ -43,17 +43,19 @@ def run_simulation():
 
         count += 1
 
-        logger.debug('-' * 100)
+        logger.debug('_' * 100)
 
         predicted_answers = generate_answers(questions, curr_article, qc)
 
-        logger.debug('-' * 100)
+        logger.debug('_' * 100)
 
         answering_acc = evaluate_answers(predicted_answers, ground_truth_answers)
 
-        logger.debug('~' * 100)
+        logger.debug('_' * 100)
 
         logger.debug('Accuracy = ' + str(answering_acc))
+
+        logger.debug('\n')
         total_acc += answering_acc
 
     logger.debug('=' * 100)
@@ -131,7 +133,7 @@ def evaluate_answers(predicted_answers, ground_truth_answers):
 
             if count == len(ans_terms):
                 score += 1.0
-        logger.debug(' '.join([str(score), " | ", actual_answer, " | ", predicted_answer]))
+        logger.debug(' '.join([str(score), " | ", str(actual_answer), " | ", str(predicted_answer)]))
         total_score += score
 
     return total_score / float(i + 1)
@@ -182,8 +184,7 @@ def generate_answers(questions_list, article, qc):
 
             rank += 1
 
-        logger.debug('Best answer :-')
-        logger.debug(predicted_answer)
+        # logger.debug(' '.join(['Answ.', str(predicted_answer)]))
         predicted_answers.append(predicted_answer)
 
     return predicted_answers
