@@ -1,0 +1,367 @@
+#!/anaconda/bin/python answer
+
+import re
+import sys
+import math
+import logging
+import operator
+import unicodedata
+from Commons import *
+from Article import Article
+from itertools import chain
+from textblob import TextBlob
+from collections import Counter
+from CoreferenceResolver import *
+from collections import defaultdict
+from QuestionClassifier import QuestionClassifier
+
+__author__ = 'avnishs, pbamotra'
+
+WORD = re.compile(r'\w+')
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=VERBOSITY)
+logger = logging.getLogger('')
+
+
+def run_simulation():
+    """
+    Runs the answering system in simulation mode and prints evaluation metrics
+    """
+    qc = load_qclassifer_model()
+
+    total_acc = 0.0
+    count = 0
+    for idx in range(1, 11):
+        article = 'data/set2/a' + str(idx)
+        article_path = '../' + article + '.txt'
+
+        questions, ground_truth_answers = get_qa_by_path(article)
+        if len(ground_truth_answers) == 0:
+            continue
+
+        article_sentences = process_article_file(article_path, nlp)
+        curr_article = Article(article_sentences)
+
+        count += 1
+
+        logger.debug('_' * 100)
+
+        predicted_answers = generate_answers(questions, curr_article, qc)
+
+        logger.debug('_' * 100)
+
+        answering_acc = evaluate_answers(predicted_answers, ground_truth_answers)
+
+        logger.debug('_' * 100)
+
+        logger.debug('Accuracy = ' + str(answering_acc))
+
+        logger.debug('\n')
+        total_acc += answering_acc
+
+    logger.debug('=' * 100)
+    logger.debug('Average Accuracy = ' + str(total_acc / float(count)))
+
+
+def run_production(argv):
+    """
+    Runs the answering system in production mode
+
+    :param argv: input arguments - article.txt questions.txt
+    """
+    if len(argv) != 4:
+        logger.error('Usage: ./answer article.txt questions.txt')
+        sys.exit(1)
+
+    article_file, question_file = argv[2], argv[3]
+    article_sentences = process_article_file(article_file, nlp)
+    curr_article = Article(article_sentences)
+
+    questions = list()
+    with open(question_file, 'r') as q_file:
+        questions = map(str.strip, q_file.readlines())
+
+    qc = load_qclassifer_model()
+    predicted_answers = generate_answers(questions, curr_article, qc)
+    for answer in predicted_answers:
+        print answer
+
+
+def load_qclassifer_model():
+    """
+    Loads/trains question classifier
+    Data set: Li and Roth QA data
+
+    :return: trained question classifier
+    """
+    if USE_PICKLE:
+        qc = QuestionClassifier(use_pickle=USE_PICKLE)
+    else:
+        with open('../data/qa_classification_tr.txt', 'r') as f:
+            lines = f.readlines()
+            qc = QuestionClassifier(use_pickle=USE_PICKLE)
+            qc.train(lines)
+
+        with open('../data/qa_classification_te.txt', 'r') as f:
+            lines = f.readlines()
+            acc, pred = qc.test(lines)
+            logger.debug('Testing accuracy was ' + acc)
+    return qc
+
+
+def evaluate_answers(predicted_answers, ground_truth_answers):
+    """
+    Evaluates answers during simulation
+
+    :param predicted_answers: list of predicted answers
+    :param ground_truth_answers: gold-standard answers by humans
+    :return: accuracy score
+    """
+    total_score = 0.0
+    i = 0.0
+    for i in range(len(predicted_answers)):
+        score = 0.0
+        actual_answer = str(nlp(u"{}".format(process_text([ground_truth_answers[i]])[0])).text).lower()
+        predicted_answer = predicted_answers[i].lower()
+        if actual_answer in predicted_answer:
+            score += 1.0
+        else:
+            ans_terms = actual_answer.split()
+            count = 0
+            for term in ans_terms:
+                if term in predicted_answer:
+                    count += 1
+
+            if count == len(ans_terms):
+                score += 1.0
+        logger.debug(' '.join([str(score), " | ", str(actual_answer), " | ", str(predicted_answer)]))
+        total_score += score
+
+    return total_score / float(i + 1)
+
+
+def generate_answers(questions_list, article, qc):
+    """
+    Generate answers to the list of question from the given article
+
+    :param questions_list: list of questions to be answered
+    :param article: article to be searched for answers
+    :param qc: pre-trained question classifer
+    :return:
+    """
+    candidate_threshold = 10
+    predicted_answers = list()
+
+    for question in questions_list:
+        q_tag = qc.predict(process_text([question])[0])
+
+        logger.debug(' '.join(['Ques.', question, ' | ', 'Classified as', q_tag]))
+
+        _max = -sys.maxint - 1
+        predicted_answer = None
+        processed_question = nlp(u"{}".format(question))
+
+        res_bm25 = dict(bm25_ranker(article, question, 1.2, 0.75, 0, candidate_threshold))
+        res_cos = dict(cos_similarity_ranker(article, question, candidate_threshold))
+
+        max_score = res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
+
+        alpha = 1
+        for ans, score in res_bm25.iteritems():
+            res_bm25[ans] = (score / float(max_score)) * alpha
+            if ans in res_cos:
+                res_bm25[ans] += (res_cos[ans]) * (1 - alpha)
+
+        res = sorted(res_bm25.items(), key=operator.itemgetter(1), reverse=True)
+
+        rank = 1
+        for (candidate_bm25, score_bm25) in res:
+            processed_candidate = nlp(u'{}'.format(candidate_bm25))
+            rank_points = get_points(score_bm25, processed_candidate, processed_question, q_tag)
+
+            if rank_points > _max:
+                predicted_answer = candidate_bm25
+                _max = rank_points
+
+            rank += 1
+
+        # logger.debug(' '.join(['Answ.', str(predicted_answer)]))
+        predicted_answers.append(predicted_answer)
+
+    return predicted_answers
+
+
+def get_points(bm25_score, spacy_answer_candidate, spacy_question, q_tag):
+    """
+    Used to rank final answer
+
+    :param bm25_score: BM25 score
+    :param spacy_answer_candidate: candidate answer as a spacy doc
+    :param spacy_question: question as a spacy doc
+    :param q_tag: tag generated by question classifier
+    :return: score
+    """
+    ner_map = {'LOC': {'LOC', 'GPE'},
+               'NUM': {'DATE', 'TIME', 'PERCENT', 'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL'},
+               'DESC': {'ALL'},
+               'HUM': {'PERSON'},
+               'ENTY': {'NORP', 'FACILITY', 'ORG', 'PERSON'},
+               'ABBR': {'ALL'}}
+
+    possible_tags = ner_map[q_tag]
+    ner_tags = [str(word.ent_type_) for word in spacy_answer_candidate]
+    ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
+
+    # TODO: this formula needs tuning
+    return bm25_score + 0.25 * (ner_score / float(len(ner_tags)))
+
+
+def get_qa_by_path(base_path):
+    """
+    Used for development purpose to read qa pairs for a particular article
+
+    :param base_path: non-canonical path of article, Eg. data/setX/aX
+    :return: qa pairs for article specified by base_path as a list
+    """
+    with open('../data/view_team_qnsans.txt') as t_file:
+        questions_answers = dict()
+        for row in t_file:
+            r = row.split('\t')
+            if r[3] == base_path:
+                questions_answers[r[5]] = r[8]
+    return questions_answers.keys(), questions_answers.values()
+
+
+def process_article_file(filename, nlp):
+    """
+    Process articles by removing irrelevant sentences and removing non-ascii characters
+
+    :param filename: path of the article
+    :param nlp: spacy NLP processor
+    :return: processed article as a list of sentences
+    """
+    result = list()
+    with open(filename, 'r') as article:
+        for line in article:
+            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+            result.append(TextBlob(resolve_coreference(cleaned, nlp)).sentences)
+
+    sentences = filter(lambda sent: (len(sent.word_counts) > 5) and '.' in sent.tokens,
+                       list(chain.from_iterable(result)))
+    # normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
+    # sentences = map(normalize_string, sentences)
+    return sentences
+
+
+def process_text(sentences):
+    """
+    Processes sentences to cleaner form
+    :param sentences: list of sentence
+    :return: processes texts
+    """
+    new_sen = list()
+    for sen in sentences:
+        s = re.sub('([.,!?\'\"()])', '', sen)
+        s = s.strip()
+        if len(s) < 1:
+            continue
+        new_sen.append(s)
+    return new_sen
+
+
+def bm25_ranker(article, question, k1, b, k3, k):
+    """
+    Returns list of ranked answers
+    :param article: article to be searched for
+    :param question: question to be answered
+    :param k1: BM25 parameter
+    :param b: BM25 parameter
+    :param k3: BM25 parameter
+    :param k: Number of answers to be returned
+    :return: list of ranked answers
+    """
+    df = defaultdict(int)
+    pattern = re.compile('[\W_]+')
+    pattern.sub('', question)
+    line2score = defaultdict()
+    qtf = Counter(question.split())
+
+    for term in qtf.keys():
+        for sentence in article.sentences:
+            if term in sentence:
+                df[term] = df.get(term, 0) + 1
+
+        for sentence in article.sentences:
+            tf = Counter(sentence.split())
+            if term in sentence:
+                log_term = math.log10((article.get_num_sentences() - df[term] + 0.5) / float(df[term] + 0.5))
+                k1_term = k1 * ((1 - b) + b * (len(sentence) / float(article.get_avg_doclen())))
+                k3_term = (float((k3 + 1) * qtf[term])) / (k3 + qtf[term])
+                middle_term = float(tf[term]) / (tf[term] + k1_term)
+                line2score[sentence] = line2score.get(sentence, 0) + log_term * middle_term * k3_term
+
+    return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
+
+
+def cos_similarity_ranker(article, question, k):
+    """
+    Finds the cosine similarity between article sentences and question
+    :param article: article to be searched for
+    :param question: question to be answered
+    :param k: Number of answers to be returned
+    :return: list of ranked answers
+    """
+    pattern = re.compile('[\W_]+')
+    pattern.sub('', question)
+    line2score = defaultdict()
+    for sentence in article.sentences:
+        line2score[sentence] = get_cosine(text_to_vector(question), text_to_vector(sentence))
+
+    return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
+
+
+def get_cosine(vec1, vec2):
+    """
+    Finds the cosine between two vectors
+    :param vec1: vector 1
+    :param vec2: vector 2
+    :return: return cosine similarity value
+    """
+    intersection = set(vec1.keys()) & set(vec2.keys())
+    numerator = sum([vec1[x] * vec2[x] for x in intersection])
+
+    sum1 = sum([vec1[x] ** 2 for x in vec1.keys()])
+    sum2 = sum([vec2[x] ** 2 for x in vec2.keys()])
+    denominator = math.sqrt(sum1) * math.sqrt(sum2)
+
+    if not denominator:
+        return 0.0
+    else:
+        return float(numerator) / denominator
+
+
+def text_to_vector(text):
+    """
+    Converts text vector containing counts
+
+    :param text: text to be converted into a vector
+    :return: returns vector of counts
+    """
+    words = WORD.findall(str(text))
+    return Counter(words)
+
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    logger.debug('Booted Falcon answering system')
+
+    if IS_PRODUCTION_MODE:
+        run_production(argv)
+    else:
+        run_simulation()
+
+    logger.debug('Terminating Falcon answering system')
+
+if __name__ == '__main__':
+    main()
