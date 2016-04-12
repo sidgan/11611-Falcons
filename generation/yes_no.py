@@ -8,6 +8,9 @@ from nltk.tag import StanfordNERTagger
 from collections import Counter
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import wordnet
+import unicodedata
+from itertools import chain
+from textblob import TextBlob
 
 PROJECT_HOME='/Users/sanchitagarwal/Desktop/11611-NLP/Project/'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
@@ -61,7 +64,10 @@ def post_process(question,pronoun,most_frequent_NE):
     question = question.replace(pronoun,most_frequent_NE,1)
     
     return question
-    
+
+
+#function to produce better no questions using wordnet hypernyms and hyponyms
+''' 
 def create_no_question(question):
     
     tagged = ner_tagger.tag(question.split())
@@ -87,6 +93,7 @@ def create_no_question(question):
     
     #print tagged
     return question
+'''
     
 def yes_no_rule_helper(sentence,verb,base_verb,label,negative=False):
     
@@ -136,22 +143,24 @@ def apply_tense_rule(sentence,verb,label):
     return [q1,q2]
 
 #takes data corresponding to a paragraph
-def generate_question(data):
+def generate_question(sentences):
     
-    most_frequent_NE = get_MostFrequent_NE(data)
+    #most_frequent_NE = get_MostFrequent_NE(data)
     
-    sentences =  sent_tokenize(data)
+    #print most_frequent_NE
     
-    #sentences = data.split('. ')
+    #sentences =  sent_tokenize(data)
     
     questions = []
     
     for sentence in sentences:
+        
+        sentence = str(sentence)
     
         print sentence
         print ''
-        if len(sentence.split())<3:
-            print sentence+"...Sentence not usable!!"
+        if len(sentence.split())<=4 or len(sentence.split())>12:
+            #print sentence+"...Sentence not usable!!"
             continue
     
         parseTree = parser.raw_parse(sentence)
@@ -188,11 +197,13 @@ def generate_question(data):
         subject = S[0][0]
         
         #post_processing involves resolving the pronoun with the most common named entity in the same paragraph
+        '''
         if subject.label()=='PRP':
             
             q[0] = post_process(q[0],subject[0],most_frequent_NE)
             q[1] = post_process(q[1],subject[0],most_frequent_NE)
-    
+        '''
+        
         questions.append(q[0])
         questions.append(q[1])
         
@@ -204,51 +215,49 @@ def generate_question(data):
     #for q in questions:
     #    print q+'\n'
             
-        
-#read data one paragraph at a time and use it to generate questions
-def readData(inputFile):
+
+def simplify(sentences):
     
-    with open(inputFile,'r') as f:
-        data = f.read()
-        
-    data = data.decode('unicode_escape').encode('ascii','ignore')
-    #re.sub(r'[^\x00-\x7f]+',r' ',data)
-    #data = re.sub(' +',' ',data)    
+    parser_server = 'FactualStatementExtractor/runStanfordParserServer.sh'
     
-    #print data
     
-    generate_question(data)
+    
+def process_article_file(filename):    
+    """
+    Process articles by removing irrelevant sentences and removing non-ascii characters
+
+    :param filename: path of the article
+    :param nlp: spacy NLP processor
+    :return: processed article as a list of sentences
+    """
+    
+    regex = r'\([^)]*\)'
+
+    with open(filename, 'r') as article:
+        for line in article:
+            
+            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+            #remove content in brackets
+            cleaned = re.sub(regex,'',cleaned)
+            
+            sentences = TextBlob(cleaned).sentences
+            
+            sentences = simplify(sentences)
+            
+            generate_question(sentences)
+            
+
+    #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
+    #                   list(chain.from_iterable(result)))
+
+    #print sentences
+
+    #return sentences
+
         
-
-sentence = 'English is a West Germanic language that was first spoken in early medieval England and is now a global lingua franca'
-sentence1 = 'The boy is playing with the ball'
-sentence2 = 'The boy played with the ball'
-sentence3 = 'The boy plays with the ball'
-sentence4 = 'The boy plays'
-sentence5 = 'The boy can do the work'
-sentence6 = 'He is a great person'
-sentence7 = 'He will do the work'
-sentence8 = 'The book was bought by John'
-sentence9 = 'He did not solve the problem'
-sentence10 = 'Francisco gives swimming all of his energy and time'
-
-#auxillary_rule fails here, need to handle this corner case
-sentence11 = 'He did the work'
-
-'''
-generate_question(sentence1)
-generate_question(sentence2)
-generate_question(sentence3)
-generate_question(sentence4)
-generate_question(sentence5)
-generate_question(sentence6)
-generate_question(sentence7)
-generate_question(sentence8)
-generate_question(sentence9)
-
-'''
-#s = 'He is doing the work'
 #generate_question(s)
 
-readData('testSample.txt')
+#readData('testSample.txt')
+
+process_article_file('a1.txt')
 
