@@ -236,11 +236,12 @@ def bm25_ranker(article, question, k1, b, k3, k):
                 df[term] = df.get(term, 0) + 1
 
         for sentence in article.sentences:
+            tf = Counter(sentence.split())
             if term in sentence:
                 log_term = math.log10((article.get_num_sentences() - df[term] + 0.5) / float(df[term] + 0.5))
                 k1_term = k1 * ((1 - b) + b * (len(sentence) / float(article.get_avg_doclen())))
                 k3_term = (float((k3 + 1) * qtf[term])) / (k3 + qtf[term])
-                middle_term = float(article.get_term_freq(term)) / (article.get_term_freq(term) + k1_term)
+                middle_term = float(tf[term]) / (tf[term] + k1_term)
                 line2score[sentence] = line2score.get(sentence, 0) + log_term * middle_term * k3_term
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
