@@ -1,21 +1,25 @@
 import re
 import logging
 import numpy as np
+from Commons import *
+from Dict2Mat import Dict2Mat
+from collections import Counter
 from sklearn import linear_model
 from sklearn.externals import joblib
-from collections import Counter
-from Dict2Mat import Dict2Mat
 from FeatureExtractor import FeatureExtractor
 from sklearn.metrics import accuracy_score, confusion_matrix
 
 __author__ = 'avnishs'
 
 
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=VERBOSITY)
 logger = logging.getLogger('')
 
 
 class QuestionClassifier:
+    """
+    Used to train/test a question classifier
+    """
     LABELS = ['DESC', 'ENTY', 'LOC', 'ABBR', 'HUM', 'NUM']
     PATTERN = re.compile(r"(\w+):(\w+) (.+)")
     MODEL = None
@@ -23,7 +27,12 @@ class QuestionClassifier:
     USE_PICKLE = False
     FEATURE_EXTRACTOR = None
 
-    def __init__(self, use_pickle=False):  # TODO: Set use_pickle = False to re-train models
+    def __init__(self, use_pickle=False):
+        """
+        Initialize the class
+
+        :param use_pickle: TO re-use the saved models inside data directory
+        """
         self.USE_PICKLE = use_pickle
         self.FEATURE_EXTRACTOR = FeatureExtractor()
         if self.USE_PICKLE:

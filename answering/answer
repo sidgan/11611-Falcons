@@ -1,45 +1,38 @@
+#!/anaconda/bin/python answer
+
 import re
 import sys
 import math
+import logging
 import operator
 import unicodedata
-from CoreferenceResolver import *
 from Commons import *
 from Article import Article
 from itertools import chain
 from textblob import TextBlob
 from collections import Counter
+from CoreferenceResolver import *
 from collections import defaultdict
 from QuestionClassifier import QuestionClassifier
 
-__author__ = 'avnishs'
+__author__ = 'avnishs, pbamotra'
 
 WORD = re.compile(r'\w+')
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=VERBOSITY)
+logger = logging.getLogger('')
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
-
-    print 'Started'
-
-    with open('../data/qa_classification_tr.txt', 'r') as f:
-        lines = f.readlines()
-        qc = QuestionClassifier(use_pickle=True)
-        qc.train(lines)
-
-    # with open('../data/qa_classification_te.txt', 'r') as f:
-    #     lines = f.readlines()
-    #     acc, pred = qc.test(lines)
-    #     print 'Testing accuracy was', acc
+def run_simulation():
+    """
+    Runs the answering system in simulation mode and prints evaluation metrics
+    """
+    qc = load_qclassifer_model()
 
     total_acc = 0.0
     count = 0
     for idx in range(1, 11):
-        article = 'data/set2/a' + `idx`  # TODO: Should be handled as per requirement!
+        article = 'data/set2/a' + str(idx)
         article_path = '../' + article + '.txt'
-
-        print article
 
         questions, ground_truth_answers = get_qa_by_path(article)
         if len(ground_truth_answers) == 0:
@@ -49,20 +42,78 @@ def main(argv=None):
         curr_article = Article(article_sentences)
 
         count += 1
-        print '-' * 100
+
+        logger.debug('-' * 100)
+
         predicted_answers = generate_answers(questions, curr_article, qc)
-        print '-' * 100
+
+        logger.debug('-' * 100)
+
         answering_acc = evaluate_answers(predicted_answers, ground_truth_answers)
-        print '~' * 100
-        print 'Accuracy = ' + str(answering_acc)
+
+        logger.debug('~' * 100)
+
+        logger.debug('Accuracy = ' + str(answering_acc))
         total_acc += answering_acc
 
-    print '=' * 100
-    print 'Average Accuracy = ' + str(total_acc / float(count))
-    print 'done!'
+    logger.debug('=' * 100)
+    logger.debug('Average Accuracy = ' + str(total_acc / float(count)))
+
+
+def run_production(argv):
+    """
+    Runs the answering system in production mode
+
+    :param argv: input arguments - article.txt questions.txt
+    """
+    if len(argv) != 4:
+        logger.error('Usage: ./answer article.txt questions.txt')
+        sys.exit(1)
+
+    article_file, question_file = argv[2], argv[3]
+    article_sentences = process_article_file(article_file, nlp)
+    curr_article = Article(article_sentences)
+
+    questions = list()
+    with open(question_file, 'r') as q_file:
+        questions = map(str.strip, q_file.readlines())
+
+    qc = load_qclassifer_model()
+    predicted_answers = generate_answers(questions, curr_article, qc)
+    for answer in predicted_answers:
+        print answer
+
+
+def load_qclassifer_model():
+    """
+    Loads/trains question classifier
+    Data set: Li and Roth QA data
+
+    :return: trained question classifier
+    """
+    if USE_PICKLE:
+        qc = QuestionClassifier(use_pickle=USE_PICKLE)
+    else:
+        with open('../data/qa_classification_tr.txt', 'r') as f:
+            lines = f.readlines()
+            qc = QuestionClassifier(use_pickle=USE_PICKLE)
+            qc.train(lines)
+
+        with open('../data/qa_classification_te.txt', 'r') as f:
+            lines = f.readlines()
+            acc, pred = qc.test(lines)
+            logger.debug('Testing accuracy was ' + acc)
+    return qc
 
 
 def evaluate_answers(predicted_answers, ground_truth_answers):
+    """
+    Evaluates answers during simulation
+
+    :param predicted_answers: list of predicted answers
+    :param ground_truth_answers: gold-standard answers by humans
+    :return: accuracy score
+    """
     total_score = 0.0
     i = 0.0
     for i in range(len(predicted_answers)):
@@ -80,30 +131,35 @@ def evaluate_answers(predicted_answers, ground_truth_answers):
 
             if count == len(ans_terms):
                 score += 1.0
-        print str(score), " | ", actual_answer, " | ", predicted_answer
+        logger.debug(' '.join([str(score), " | ", actual_answer, " | ", predicted_answer]))
         total_score += score
 
     return total_score / float(i + 1)
 
 
-def generate_answers(sample_qa, curr_article, qc):
+def generate_answers(questions_list, article, qc):
+    """
+    Generate answers to the list of question from the given article
+
+    :param questions_list: list of questions to be answered
+    :param article: article to be searched for answers
+    :param qc: pre-trained question classifer
+    :return:
+    """
     candidate_threshold = 10
     predicted_answers = list()
 
-    for question in sample_qa:
+    for question in questions_list:
         q_tag = qc.predict(process_text([question])[0])
 
-        print 'Ques.', question, ' | ', 'Classified as', q_tag
-        # print 'Ans. ', actual_answer
+        logger.debug(' '.join(['Ques.', question, ' | ', 'Classified as', q_tag]))
 
         _max = -sys.maxint - 1
         predicted_answer = None
-        processed_q = nlp(u"{}".format(question))
+        processed_question = nlp(u"{}".format(question))
 
-        # TODO: Currently comparing results from both BM25 and cosine similarity, change this later!
-
-        res_bm25 = dict(bm25_ranker(curr_article, question, 1.2, 0.75, 0, candidate_threshold))
-        res_cos = dict(cos_similarity_ranker(curr_article, question, candidate_threshold))
+        res_bm25 = dict(bm25_ranker(article, question, 1.2, 0.75, 0, candidate_threshold))
+        res_cos = dict(cos_similarity_ranker(article, question, candidate_threshold))
 
         max_score = res_bm25[max(res_bm25, key=lambda i: res_bm25[i])]
 
@@ -117,32 +173,29 @@ def generate_answers(sample_qa, curr_article, qc):
 
         rank = 1
         for (candidate_bm25, score_bm25) in res:
+            processed_candidate = nlp(u'{}'.format(candidate_bm25))
+            rank_points = get_points(score_bm25, processed_candidate, processed_question, q_tag)
 
-            rank_points = get_points(score_bm25, rank, candidate_threshold, nlp(u'{}'.format(candidate_bm25)),
-                                     processed_q, q_tag)
-
-            # print rank, candidate_bm25, score_bm25, rank_points
-            # print idx_cos, candidate2, score2
             if rank_points > _max:
                 predicted_answer = candidate_bm25
                 _max = rank_points
 
             rank += 1
 
-        # print 'Best answer -', predicted_answer
+        logger.debug('Best answer :-')
+        logger.debug(predicted_answer)
         predicted_answers.append(predicted_answer)
 
     return predicted_answers
 
 
-def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag):
+def get_points(bm25_score, spacy_answer_candidate, spacy_question, q_tag):
     """
     Used to rank final answer
+
     :param bm25_score: BM25 score
-    :param rank: BM25 rank
-    :param candidate_threshold: number of BM25 results
-    :param spacy_candidate: candidate answer as a spacy doc
-    :param q: question as a spacy doc
+    :param spacy_answer_candidate: candidate answer as a spacy doc
+    :param spacy_question: question as a spacy doc
     :param q_tag: tag generated by question classifier
     :return: score
     """
@@ -154,11 +207,11 @@ def get_points(bm25_score, rank, candidate_threshold, spacy_candidate, q, q_tag)
                'ABBR': {'ALL'}}
 
     possible_tags = ner_map[q_tag]
-    ner_tags = [str(word.ent_type_) for word in spacy_candidate]
+    ner_tags = [str(word.ent_type_) for word in spacy_answer_candidate]
     ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
 
     # TODO: this formula needs tuning
-    return (bm25_score) + 0.25 * (ner_score / float(len(ner_tags)))
+    return bm25_score + 0.25 * (ner_score / float(len(ner_tags)))
 
 
 def get_qa_by_path(base_path):
@@ -182,6 +235,7 @@ def process_article_file(filename, nlp):
     Process articles by removing irrelevant sentences and removing non-ascii characters
 
     :param filename: path of the article
+    :param nlp: spacy NLP processor
     :return: processed article as a list of sentences
     """
     result = list()
@@ -295,6 +349,18 @@ def text_to_vector(text):
     return Counter(words)
 
 
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
+    logger.debug('Booted Falcon answering system')
+
+    if IS_PRODUCTION_MODE:
+        run_production(argv)
+    else:
+        run_simulation()
+
+    logger.debug('Terminating Falcon answering system')
+
 if __name__ == '__main__':
     main()
-    # print process_article_file('../data/set1/a2.txt')

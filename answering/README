@@ -1,0 +1,21 @@
+Falcon answering system
+-----------------------
+
+Authors: Avnish Saraf (avnishs@andrew.cmu.edu), Pankesh Bamotra (pbamotra@andrew.cmu.edu)
+
+To run a production like testing case, run the following: -
+    ./answer ../data/set2/a7.txt ../data/sample_question_data_set2_a7
+
+To turn off the verbosity on cmdline: -
+    Set VERBOSITY = logging.INFO in Commons.py
+
+
+Possible issue you may face: -
+1. Library missing issue. Please run the following: -
+    pip install -r requirements.txt
+    python -m spacy.en.download         <- Takes about 5 minutes to download
+
+2. On a windows system, please change the shebang path in `answer' to correct python binary.
+
+If any issue persists, please let the authors know.
+

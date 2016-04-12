@@ -1,5 +1,6 @@
 import re
 import time
+import logging
 import warnings
 from spacy.en import English
 
@@ -7,8 +8,12 @@ __author__ = 'pbamotra'
 
 nlp = English()
 WORD = re.compile(r'\w+')
-IS_PRODUCTION_MODE = False
+# ------------ Controls if the system runs in simulation mode or production mode ------------ #
+IS_PRODUCTION_MODE = True
+# ------------------------------------------------------------------------------------------- #
 CANDIDATE_THRESHOLD = 10
+USE_PICKLE = True
+VERBOSITY = logging.DEBUG
 
 
 def deprecated(func):
@@ -32,13 +37,17 @@ def deprecated(func):
 
 
 def timeit(method):
+    """
+    Used as a decorator to time a method for execution time
+
+    :param method: method to be timed
+    """
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
 
-        print '%r (%r, %r) %2.2f sec' % \
-              (method.__name__, args, kw, te - ts)
+        print '%r (%r, %r) %2.2f sec' % (method.__name__, args, kw, te - ts)
         return result
 
     return timed
