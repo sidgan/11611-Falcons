@@ -37,9 +37,13 @@ class QuestionClassifier:
         self.FEATURE_EXTRACTOR = FeatureExtractor()
         if self.USE_PICKLE:
             logger.debug('Loading pickled model')
-
-            self.MODEL = joblib.load('../data/q_classifier.pkl')
-            self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
+            model_path = '../data/q_classifier.pkl'
+            dict_path = '../data/feature_dict.pkl'
+            if IS_PRODUCTION_MODE:
+                model_path = './11611-Falcons/data/q_classifier.pkl'
+                dict_path = './11611-Falcons/data/feature_dict.pkl'
+            self.MODEL = joblib.load(model_path)
+            self.FEATURE_TEMPLATE = joblib.load(dict_path)
 
             logger.debug('Model loaded successfully')
 
