@@ -24,7 +24,7 @@ VERB_PAST='VBD'
 VERB_PRESENT='VBP'
 VERB_FUTURE='VB'
 DAYS_MONTHS=[name.lower() for name in calendar.day_name[:] + calendar.month_name[1:] + ["a.m", "p.m"]]
-LOCATION_TIME_PP=["in", "on", "over", "at"]
+LOCATION_TIME_PP=["in", "on", "over", "at", "during"]
 
 with open("sample.txt") as sample_file:
     raw_text = sample_file.readline()
