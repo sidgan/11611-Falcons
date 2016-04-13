@@ -229,9 +229,9 @@ def get_qa_by_path(base_path):
     :param base_path: non-canonical path of article, Eg. data/setX/aX
     :return: qa pairs for article specified by base_path as a list
     """
-    qns_path = '../data/feature_dict.pkl'
+    qns_path = '../data/view_team_qnsans.txt'
     if IS_PRODUCTION_MODE:
-        qns_path = './11611-Falcons/data/feature_dict.pkl'
+        qns_path = './11611-Falcons/data/view_team_qnsans.txt'
     with open(qns_path) as t_file:
         questions_answers = dict()
         for row in t_file:
