@@ -1,7 +1,7 @@
 import re
 import logging
 import numpy as np
-from Commons import *
+from commons import *
 from Dict2Mat import Dict2Mat
 from collections import Counter
 from sklearn import linear_model
