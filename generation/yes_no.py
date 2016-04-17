@@ -9,10 +9,11 @@ from collections import Counter
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import wordnet
 import unicodedata
+import FactualStatementExtractor.proc as proc
 from itertools import chain
 from textblob import TextBlob
 
-PROJECT_HOME='/Users/sanchitagarwal/Desktop/11611-NLP/Project/'
+PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
 NER_PATH=os.path.join(PROJECT_HOME, 'stanford-ner-2015-04-20')
 PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz')
@@ -217,9 +218,7 @@ def generate_question(sentences):
             
 
 def simplify(sentences):
-    
-    parser_server = 'FactualStatementExtractor/runStanfordParserServer.sh'
-    
+    return proc.simplify(sentences)
     
     
 def process_article_file(filename):    
@@ -232,20 +231,18 @@ def process_article_file(filename):
     """
     
     regex = r'\([^)]*\)'
-
+    sentences = []
+    combined_sentences = []
     with open(filename, 'r') as article:
         for line in article:
-            
             cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
             #remove content in brackets
             cleaned = re.sub(regex,'',cleaned)
-            
-            sentences = TextBlob(cleaned).sentences
-            
-            sentences = simplify(sentences)
-            
-            generate_question(sentences)
-            
+            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences])
+        sentences = simplify(". ".join(sentences))
+        #print sentences
+        sample = ['English is a West Germanic language that was first spoken in early medieval England.', 'English is now a global lingua franca.']
+        generate_question(sample)
 
     #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
     #                   list(chain.from_iterable(result)))
@@ -259,5 +256,5 @@ def process_article_file(filename):
 
 #readData('testSample.txt')
 
-process_article_file('a1.txt')
+process_article_file('a1small.txt')
 
