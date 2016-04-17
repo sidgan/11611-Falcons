@@ -35,9 +35,9 @@ os.environ['CLASSPATH'] = PARSER_PATH + ':' + NER_PATH
 
 s = ["The boy is playing with a ball.", "Sachin won an award.", "I was born on a Tuesday", "Manchester United played on a Monday in Pittsburgh", "Why Did You Put Up That Banner When We Won 4 Nil?"]
 s = raw_text.split(".")[:]
+lemmatizer = WordNetLemmatizer()
 parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
 ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
-lemmatizer = WordNetLemmatizer()
 
 sentences = parser.raw_parse_sents(([x.lower() for x in s[:]]))
 #tags = [ner_tagger.tag(sentence.split(DELIMITERS)) for sentence in s]
