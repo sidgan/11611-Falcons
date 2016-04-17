@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import Queue
 import threading
 import nltk as nl
-from Commons import *
+from commons import *
 from itertools import chain
 from nltk.corpus import wordnet as wn
 

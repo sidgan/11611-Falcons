@@ -13,7 +13,7 @@ IS_PRODUCTION_MODE = True
 # ------------------------------------------------------------------------------------------- #
 CANDIDATE_THRESHOLD = 10
 USE_PICKLE = True
-VERBOSITY = logging.DEBUG
+VERBOSITY = logging.INFO if IS_PRODUCTION_MODE else logging.DEBUG
 
 
 def deprecated(func):
