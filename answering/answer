@@ -315,7 +315,7 @@ def get_qa_by_path(base_path):
     """
     Used for development purpose to read qa pairs for a particular article
 
-    :param base_path: non-canonical path of article, Eg. data/setX/aX
+    :param: base_path: non-canonical path of article, Eg. data/setX/aX
     :return: qa pairs for article specified by base_path as a list
     """
     with open('../data/view_team_qnsans.txt') as t_file:
