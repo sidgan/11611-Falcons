@@ -1,7 +1,7 @@
 import re
 import logging
 import numpy as np
-from commons import *
+from Commons import *
 from Dict2Mat import Dict2Mat
 from collections import Counter
 from sklearn import linear_model
@@ -37,13 +37,9 @@ class QuestionClassifier:
         self.FEATURE_EXTRACTOR = FeatureExtractor()
         if self.USE_PICKLE:
             logger.debug('Loading pickled model')
-            model_path = '../data/q_classifier.pkl'
-            dict_path = '../data/feature_dict.pkl'
-            if IS_PRODUCTION_MODE:
-                model_path = './11611-Falcons/data/q_classifier.pkl'
-                dict_path = './11611-Falcons/data/feature_dict.pkl'
-            self.MODEL = joblib.load(model_path)
-            self.FEATURE_TEMPLATE = joblib.load(dict_path)
+
+            self.MODEL = joblib.load('../data/q_classifier.pkl')
+            self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
 
             logger.debug('Model loaded successfully')
 
@@ -116,12 +112,22 @@ class QuestionClassifier:
         logger.debug(confusion_matrix(testing_labels, predictions))
         return accuracy_score(testing_labels, predictions), predictions
 
+    def check_yes_no(self, question):
+        yes_no_words = ('is', 'are', 'was', 'has', 'have', 'had', 'do', 'did', 'does', 'will', 'would', 'can', 'could', 'shall',
+                        'should')
+        first_word = question.split()[0].lower()
+        return first_word in yes_no_words
+
+
     def predict(self, question):
         """
         Predicts the label for the question
         :param question: question for which label is to be predicted
         :return: prediction label
         """
+        if self.check_yes_no(question):
+            return 'YES_NO'
+
         if self.MODEL is None:
             logger.error('Call the train function first!')
             return None

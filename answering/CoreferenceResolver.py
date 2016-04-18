@@ -1,11 +1,12 @@
 from math import *
+from Commons import *
 
 __author__ = 'avnishs'
 
 noun_dict = dict()
 
 
-def resolve_coreference(para, nlp):
+def resolve_coreference(para):
     """
     Resolves entity co-reference between pronouns and nouns
 
@@ -13,32 +14,39 @@ def resolve_coreference(para, nlp):
     :param nlp: spacy NLP processor
     :return: paragraph as a string with resolved entities
     """
-    terms = nlp(u"{}".format(para))
     idx = 0
-    result = ''
+    
+    res_list = list()
 
-    for term in terms:
-        tag = term.tag_
-        if tag.startswith("NN"):
-            noun_dict[term] = idx
-            result += str(term)
-        elif tag.startswith("PRP"):
-            max_sim = 0.0
-            best_term = None
-            for (noun, pos) in noun_dict.iteritems():
-                sim = similarity(term, noun, idx, pos)
-                if sim > max_sim:
-                    max_sim = sim
-                    best_term = noun
-            result += str(best_term)
-            noun_dict[best_term] = idx
-        else:
-            result += str(term)
+    for sentence in para:
+        result = ''
+        terms = nlp(u"{}".format(sentence))
+        for term in terms:
+            if len(str(term).strip()) == 0:
+                continue
 
-        result += " "
-        idx += 1
+            tag = term.tag_
+            if tag.startswith("NN"):
+                noun_dict[term] = idx
+                result += str(term)
+            elif tag.startswith("PRP"):
+                max_sim = 0.0
+                best_term = None
+                for (noun, pos) in noun_dict.iteritems():
+                    sim = similarity(term, noun, idx, pos)
+                    if sim > max_sim:
+                        max_sim = sim
+                        best_term = noun
+                result += str(best_term)
+                noun_dict[best_term] = idx
+            else:
+                result += str(term)
 
-    return result
+            result += " "
+            idx += 1
+        res_list.append(result)    
+
+    return res_list
 
 
 def normpdf(x, mu, sigma):
@@ -56,6 +64,11 @@ def normpdf(x, mu, sigma):
     return y
 
 
+def custompdf(noun_pos,  pro_pos):
+    sigmoid = 1 / float(1 + exp(noun_pos - pro_pos))
+    min_component = 0.5 * (pro_pos - noun_pos)
+    return min((sigmoid + min_component) / float(2), sigmoid)
+    
 def similarity(pronoun, noun, idx, noun_pos):
     """
     Computes similarity score between pronoun and noun

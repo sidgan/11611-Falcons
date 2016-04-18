@@ -1,4 +1,4 @@
-#!/anaconda/bin/python answer
+#!/usr/bin/python answer
 
 import re
 import sys
@@ -6,7 +6,7 @@ import math
 import logging
 import operator
 import unicodedata
-from commons import *
+from Commons import *
 from Article import Article
 from itertools import chain
 from textblob import TextBlob
@@ -14,6 +14,7 @@ from collections import Counter
 from CoreferenceResolver import *
 from collections import defaultdict
 from QuestionClassifier import QuestionClassifier
+
 
 __author__ = 'avnishs, pbamotra'
 
@@ -31,10 +32,18 @@ def run_simulation():
     total_acc = 0.0
     count = 0
     for idx in range(1, 11):
-        article = 'data/set4/a' + str(idx)
+        article = 'data/set1/a' + str(idx)
         article_path = '../' + article + '.txt'
 
+        process_question = lambda question: process_string(question)[0]
+        empty_question = lambda question: len(question.strip()) == 0
+
         questions, ground_truth_answers = get_qa_by_path(article)
+        if any(map(empty_question, questions)):
+            logger.error('Empty question found. Please check questions file')
+            sys.exit(1)
+        questions = map(process_question, questions)
+
         if len(ground_truth_answers) == 0:
             continue
 
@@ -59,7 +68,7 @@ def run_simulation():
         total_acc += answering_acc
 
     logger.debug('=' * 100)
-    logger.debug('Average Accuracy = ' + str(total_acc / float(count)))
+    logger.debug('Average Accuracy = ' + str(total_acc / float(max(count,1))))
 
 
 def run_production(argv):
@@ -77,8 +86,11 @@ def run_production(argv):
     curr_article = Article(article_sentences)
 
     questions = list()
+    
+    process_question = lambda question: process_string(question)[0]
+
     with open(question_file, 'r') as q_file:
-        questions = map(str.strip, q_file.readlines())
+        questions = map(process_question, map(str.strip, q_file.readlines()))
 
     qc = load_qclassifer_model()
     predicted_answers = generate_answers(questions, curr_article, qc)
@@ -93,21 +105,15 @@ def load_qclassifer_model():
 
     :return: trained question classifier
     """
-    train_data_path = '../data/qa_classification_tr.txt'
-    test_data_path = '../data/qa_classification_te.txt'
-
-    if IS_PRODUCTION_MODE:
-        train_data_path = './11611-Falcons/data/qa_classification_tr.txt'
-        test_data_path = './11611-Falcons/data/qa_classification_te.txt'
     if USE_PICKLE:
         qc = QuestionClassifier(use_pickle=USE_PICKLE)
     else:
-        with open(train_data_path, 'r') as f:
+        with open('./11611-Falcons/data/qa_classification_tr.txt', 'r') as f:
             lines = f.readlines()
             qc = QuestionClassifier(use_pickle=USE_PICKLE)
             qc.train(lines)
 
-        with open(test_data_path, 'r') as f:
+        with open('./11611-Falcons/data/qa_classification_te.txt', 'r') as f:
             lines = f.readlines()
             acc, pred = qc.test(lines)
             logger.debug('Testing accuracy was ' + acc)
@@ -149,6 +155,23 @@ def evaluate_answers(predicted_answers, ground_truth_answers):
     return total_score / float(i + 1 - invalid_qs)
 
 
+def minimumEditDistance(s1,s2):
+    if len(s1) > len(s2):
+        s1,s2 = s2,s1
+    distances = range(len(s1) + 1)
+    for index2,char2 in enumerate(s2):
+        newDistances = [index2+1]
+        for index1,char1 in enumerate(s1):
+            if char1 == char2:
+                newDistances.append(distances[index1])
+            else:
+                newDistances.append(1 + min((distances[index1],
+                                             distances[index1+1],
+                                             newDistances[-1])))
+        distances = newDistances
+    return distances[-1]
+
+
 def generate_answers(questions_list, article, qc):
     """
     Generate answers to the list of question from the given article
@@ -162,14 +185,17 @@ def generate_answers(questions_list, article, qc):
     predicted_answers = list()
 
     for question in questions_list:
-        q_tag = qc.predict(process_text([question])[0])
+        q_tag = qc.predict(question)
 
         logger.debug(' '.join(['Ques.', question, ' | ', 'Classified as', q_tag]))
 
         _max = -sys.maxint - 1
+        _max_ngram = -sys.maxint - 1
+
         predicted_answer = None
         processed_question = nlp(u"{}".format(question))
 
+        #res_bm25 = dict(edit_dist_ranker(article, question, candidate_threshold))
         res_bm25 = dict(bm25_ranker(article, question, 1.2, 0.75, 0, candidate_threshold))
         res_cos = dict(cos_similarity_ranker(article, question, candidate_threshold))
 
@@ -184,29 +210,56 @@ def generate_answers(questions_list, article, qc):
         res = sorted(res_bm25.items(), key=operator.itemgetter(1), reverse=True)
 
         rank = 1
-        for (candidate_bm25, score_bm25) in res:
-            processed_candidate = nlp(u'{}'.format(candidate_bm25))
-            rank_points = get_points(score_bm25, processed_candidate, processed_question, q_tag)
 
+        #if q_tag == 'YES_NO':
+        print 
+	print 'Candidate answers'
+        print '=' * 150
+        
+	for (candidate_bm25, score_bm25) in res:
+            processed_candidate = nlp(u'{}'.format(candidate_bm25))
+            rank_points = score_bm25 #+ 0.0 * get_points(score_bm25, processed_candidate, processed_question, q_tag, qc, question, candidate_bm25)
+
+            #similarity = processed_candidate.similarity(processed_question)
+            #if q_tag == 'YES_NO':
+            print processed_candidate, score_bm25, rank_points#edit_distance
+            
             if rank_points > _max:
                 predicted_answer = candidate_bm25
                 _max = rank_points
+                _max_ngram = rank_points
 
             rank += 1
 
-        # logger.debug(' '.join(['Answ.', str(predicted_answer)]))
-        predicted_answers.append(predicted_answer)
+        #logger.debug(' '.join(['Answ.', str(predicted_answer)]))
+        if q_tag == 'YES_NO':
+            predicted_answer = 'yes' if _max_ngram >= 0.5 else 'no' #' '.join([q_tag, predicted_answer])
+            print 'Predicted answer', predicted_answer, _max
+	logger.debug(' '.join(['Answ.', str(predicted_answer)]))
+	predicted_answers.append(predicted_answer)
 
     return predicted_answers
 
 
-def get_points(bm25_score, spacy_answer_candidate, spacy_question, q_tag):
+def create_ngrams(terms, n=2):
+        """
+        Creates n-grams from the terms
+        :param terms: list of terms from which n-grams are to be formed
+        :param n: length of the n-gram
+        :return: list of n-grams
+        """
+        n_grams = map(list, zip(*[terms[i:] for i in range(n)]))
+        return [' '.join(n_gram) for n_gram in n_grams]
+
+
+def get_points(bm25_score, spacy_answer_candidate, spacy_question, q_tag, qc, question, candidate_bm25):
+#def get_points(question, candidate_bm25):
     """
     Used to rank final answer
 
     :param bm25_score: BM25 score
     :param spacy_answer_candidate: candidate answer as a spacy doc
-    :param spacy_question: question as a spacy doc`
+    :param spacy_question: question as a spacy doc
     :param q_tag: tag generated by question classifier
     :return: score
     """
@@ -215,16 +268,48 @@ def get_points(bm25_score, spacy_answer_candidate, spacy_question, q_tag):
                'DESC': {'ALL'},
                'HUM': {'PERSON'},
                'ENTY': {'NORP', 'FACILITY', 'ORG', 'PERSON'},
-               'ABBR': {'ALL'}}
+               'ABBR': {'ALL'},
+               'YES_NO': {'ALL'}}
+
+    
+    ner_component = 0
 
     possible_tags = ner_map[q_tag]
-    ner_tags = [str(word.ent_type_) for word in spacy_answer_candidate if len(word.ent_type_) != 0]
+    ner_tags = set([str(word.ent_type_) for word in spacy_answer_candidate if len(word.ent_type_) > 0])
     ner_score = sum(map(lambda tag: 1 if tag in possible_tags else 0, ner_tags))
+    ner_component = 0.1 * (1 if ner_score > 0 else 0)
+    
+    '''
+    case_upper = lambda word: word[0].isupper()
 
+    n_ques_case_upper = set(filter(case_upper, [str(token) for token in spacy_question][1:]))
+    n_ans_case_upper = set(filter(case_upper, [str(token) for token in spacy_answer_candidate]))
     # TODO: this formula needs tuning
-    ner_score = 0 if len(ner_tags) == 0 else ner_score / float(len(ner_tags))
-    return bm25_score + 0.45 * ner_score
+    case_score = 0 * len(n_ques_case_upper.intersection(n_ans_case_upper))
 
+    similarity = 0 * spacy_question.similarity(spacy_answer_candidate)
+    
+
+    q_ngram = create_ngrams(process_string(question, remove_stop=True, remove_punct=True)[0].split())
+    a_ngram = create_ngrams(process_string(candidate_bm25, remove_stop=True, remove_punct=True)[0].split())
+
+    ngram_score = 0
+    for qgram in q_ngram:
+        qspacy = nlp(u"{}".format(qgram))
+        for agram in a_ngram:
+            aspacy = nlp(u"{}".format(agram))
+            ngram_score += qspacy.similarity(aspacy)
+    '''
+
+    answer_ed = process_string(candidate_bm25, remove_punct=True, remove_stop=True)[0].lower().split()
+    question_ed = process_string(question, remove_punct=True, remove_stop=True)[0].lower().split()
+    edit_distance = minimumEditDistance(answer_ed, question_ed) / float(len(answer_ed))
+    # print 'Edit edit_distance', edit_distance
+
+    # + ngram_score / float((len(q_ngram) * len(a_ngram)) + 1) 
+    # + ner_component #ngram_score / float((len(q_ngram) * len(a_ngram)) + 1) + (1 / float(edit_distance))
+    return 1 / float(edit_distance) 
+    
 
 def get_qa_by_path(base_path):
     """
@@ -233,17 +318,32 @@ def get_qa_by_path(base_path):
     :param base_path: non-canonical path of article, Eg. data/setX/aX
     :return: qa pairs for article specified by base_path as a list
     """
-    qns_path = '../data/view_team_qnsans.txt'
-    if IS_PRODUCTION_MODE:
-        qns_path = './11611-Falcons/data/view_team_qnsans.txt'
-
-    with open(qns_path) as t_file:
+    with open('../data/view_team_qnsans.txt') as t_file:
         questions_answers = dict()
         for row in t_file:
             r = row.split('\t')
             if r[3] == base_path:
                 questions_answers[r[5]] = r[8]
     return questions_answers.keys(), questions_answers.values()
+
+
+def process_string(input_string, remove_stop=False, remove_punct=False):
+    """
+    """
+    cleaned = unicodedata.normalize('NFKD', input_string.decode('utf-8').strip()).encode('ASCII', 'ignore')
+    text = nlp(u"{}".format(cleaned))
+    result = None
+    sentences = list(text.sents)
+
+    if not remove_stop:
+        result = [[token for token in spacy_cleaned] for spacy_cleaned in sentences]
+    else:
+        result = [[token for token in spacy_cleaned if not token.is_stop] for spacy_cleaned in sentences]
+
+    if remove_punct:
+        return [' '.join([str(token) for token in sentence if not token.is_punct]) for sentence in result]
+ 
+    return [' '.join([str(token) for token in sentence]) for sentence in result]
 
 
 def process_article_file(filename, nlp):
@@ -256,14 +356,11 @@ def process_article_file(filename, nlp):
     """
     result = list()
     with open(filename, 'r') as article:
-        for line in article:
-            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-            result.append(TextBlob(resolve_coreference(cleaned, nlp)).sentences)
-
-    sentences = filter(lambda sent: (len(sent.word_counts) > 5) and '.' in sent.tokens,
+        for idx, line in enumerate(article):
+            cleaned = process_string(line)
+            result.append(resolve_coreference(cleaned))
+    sentences = filter(lambda sent: (len(sent.split()) > 5) and sent.strip().endswith('.'),
                        list(chain.from_iterable(result)))
-    # normalize_string = lambda sent: unicodedata.normalize('NFKD', sent.string.strip()).encode('ASCII', 'ignore')
-    # sentences = map(normalize_string, sentences)
     return sentences
 
 
@@ -283,6 +380,18 @@ def process_text(sentences):
     return new_sen
 
 
+def edit_dist_ranker(article, question, k):
+    question = process_string(question, remove_punct=True)[0].lower().split()
+    line2score = defaultdict()
+
+    for sentence in article.sentences:
+        _sentence = process_string(sentence, remove_punct=True)[0].lower().split()
+        score = len(_sentence) / float(minimumEditDistance(question, _sentence))
+        line2score[sentence] = score
+
+    return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
+
+
 def bm25_ranker(article, question, k1, b, k3, k):
     """
     Returns list of ranked answers
@@ -295,24 +404,26 @@ def bm25_ranker(article, question, k1, b, k3, k):
     :return: list of ranked answers
     """
     df = defaultdict(int)
-    pattern = re.compile('[\W_]+')
-    pattern.sub('', question)
     line2score = defaultdict()
+    question = question.lower()
     qtf = Counter(question.split())
 
     for term in qtf.keys():
         for sentence in article.sentences:
+            sentence = sentence.lower()
             if term in sentence:
                 df[term] = df.get(term, 0) + 1
 
         for sentence in article.sentences:
+            _sentence = sentence
+            sentence = sentence.lower()
             tf = Counter(sentence.split())
             if term in sentence:
                 log_term = math.log10((article.get_num_sentences() - df[term] + 0.5) / float(df[term] + 0.5))
-                k1_term = k1 * ((1 - b) + b * (len(sentence) / float(article.get_avg_doclen())))
+                k1_term = k1 * ((1 - b) + b * (len(sentence.split()) / float(article.get_avg_doclen())))
                 k3_term = (float((k3 + 1) * qtf[term])) / (k3 + qtf[term])
                 middle_term = float(tf[term]) / (tf[term] + k1_term)
-                line2score[sentence] = line2score.get(sentence, 0) + log_term * middle_term * k3_term
+                line2score[_sentence] = line2score.get(_sentence, 0) + log_term * middle_term * k3_term
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]
 
@@ -325,10 +436,10 @@ def cos_similarity_ranker(article, question, k):
     :param k: Number of answers to be returned
     :return: list of ranked answers
     """
-    pattern = re.compile('[\W_]+')
-    pattern.sub('', question)
     line2score = defaultdict()
+    question = question.lower()
     for sentence in article.sentences:
+        sentence = sentence.lower()
         line2score[sentence] = get_cosine(text_to_vector(question), text_to_vector(sentence))
 
     return sorted(line2score.items(), key=operator.itemgetter(1), reverse=True)[0:min(k, len(line2score))]

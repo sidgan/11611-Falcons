@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import Queue
 import threading
 import nltk as nl
-from commons import *
+from Commons import *
 from itertools import chain
 from nltk.corpus import wordnet as wn
 
@@ -127,7 +127,7 @@ class FeatureExtractor:
 
         rel_ner, rel_pos, rel_cat = list(), list(), list()
 
-        for i in range(len(ner_tags)):
+        for i in range(len(sentence_tokens)):
             if len(ner_tags[i]) != 0 \
                     or pos_tags[i].startswith(u'NN') or pos_tags[i].startswith(u'VB') \
                     or pos_tags[i].startswith(u'RB') or pos_tags[i].startswith(u'JJ'):
