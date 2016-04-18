@@ -1,55 +1,34 @@
-import os
 import re
 
-from nltk.parse import stanford
-from nltk.tag import StanfordNERTagger
 from nltk.tree import Tree
-from nltk.corpus import wordnet as wn
 from nltk.stem.wordnet import WordNetLemmatizer
 import calendar
+from SupersenseTagger import proc
 
 import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
-'''
-PROJECT_HOME='/home/deepak/Downloads/NLP/project'
-PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
-NER_PATH=os.path.join(PROJECT_HOME, 'stanford-ner-2015-04-20')
-PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz')
-NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
-'''
 WHO_PRONOUNS=set(["i", "he", "she", "you", "we", "they"])
+WHO_TAGS=set(["noun.person", "noun.group"])
 WHAT_PRONOUNS=set(["it", "this", "that"])
+WHAT_TAGS=set(["noun.Tops","noun.act","noun.animal","noun.artifact","noun.attribute","noun.body","noun.cognition","noun.communication","noun.event","noun.feeling","noun.food","noun.group","noun.location","noun.motive","noun.object","noun.other","noun.phenomenon","noun.plant","noun.possession","noun.process","noun.quantity","noun.relation","noun.shape","noun.state","noun.substance"])
 VERB_PAST='VBD'
 VERB_PRESENT='VBP'
 VERB_FUTURE='VB'
 DAYS_MONTHS=[name.lower() for name in calendar.day_name[:] + calendar.month_name[1:] + ["a.m", "p.m"]]
 LOCATION_TIME_PP=["in", "on", "over", "at", "during"]
 
-'''
-os.environ['STANFORD_PARSER'] = PARSER_PATH
-os.environ['STANFORD_MODELS'] = PARSER_PATH
-os.environ['CLASSPATH'] = PARSER_PATH + ':' + NER_PATH
-'''
-
 lemmatizer = WordNetLemmatizer()
-'''
-parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
-ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
-
-
-sentences = parser.raw_parse_sents(([x.lower() for x in s[:]]))
-#tags = [ner_tagger.tag(sentence.split(DELIMITERS)) for sentence in s]
-'''
 
 def get_wh_word(ner_tagger, np_tree):
-    tags = ner_tagger.tag(np_tree.leaves())
+    #tags = ner_tagger.tag(np_tree.leaves())
+    tags = proc.tag(" ".join(np_tree.leaves()))
     #TODO: Apply WH word logic
     for num, word in enumerate(np_tree.leaves()):
-        if tags[num][1] == "PERSON" or tags[num][1] == "ORGANIZATION" or word in WHO_PRONOUNS:
+        if tags[num] in WHO_TAGS or word in WHO_PRONOUNS:
             return "Who"
-        if word in WHAT_PRONOUNS:
+        if tags[num] in WHAT_TAGS or word in WHAT_PRONOUNS:
             return "What"
     return "What"
 

@@ -13,7 +13,8 @@ import FactualStatementExtractor.proc as proc
 from itertools import chain
 from textblob import TextBlob
 import gen
-
+import time
+from subprocess import Popen, PIPE
 
 PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
@@ -22,7 +23,7 @@ PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/st
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
-'''
+
 #Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
@@ -31,7 +32,6 @@ parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
 ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
 #END
 '''
-
 #Loading tools on PROD
 stanford_path = os.environ["CORENLP_3_5_2_PATH"]
 parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"),
@@ -39,7 +39,7 @@ parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3
 ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
                        os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
 #END
-
+'''
 lemmatizer = WordNetLemmatizer()
 
 AUXILLARIES = Set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
@@ -73,13 +73,9 @@ def get_MostFrequent_NE(paragraph):
     return most_frequent_NE
 
 def post_process(question,pronoun,most_frequent_NE):
-    
     pronoun = pronoun.lower()
-    
     question = question.replace(pronoun,most_frequent_NE,1)
-    
     return question
-
 
 #function to produce better no questions using wordnet hypernyms and hyponyms
 ''' 
@@ -163,7 +159,7 @@ def generate_question(sentences):
     #sentences =  sent_tokenize(data)
     questions = []
     for sentence in sentences:
-        print sentence
+        sentence = sentence.rstrip(".")
         if len(sentence.split()) > 12 or len(sentence.split()) < 4:
             #print sentence+"...Sentence not usable!!"
             continue
@@ -173,8 +169,8 @@ def generate_question(sentences):
 
         questions.extend(generate_yes_no(root, sentence))
         questions.extend(generate_who_what(root, ner_tagger))
+    return questions
     
-
 def generate_who_what(root, ner_tagger):
     return gen.apply_subject_rule(root, ner_tagger)
 
@@ -217,20 +213,34 @@ def generate_yes_no(root, sentence):
 def simplify(sentences):
     return proc.simplify(sentences)
         
-def process_article_file(filename):    
+def process_article_file(filename, nquestions):
     bracket_regex = r'\([^)]*\)'
     sentences = []
+    questions = []
+    #try:
+    os.system("kill -9 $(lsof -i:5556 -t)")
+    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
+    time.sleep(15)
+    print "OUT OF SLEEP"
     with open(filename, 'r') as article:
         for line in article:
             cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
             cleaned = re.sub(bracket_regex,'',cleaned)
-            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences])
-        sentences = simplify(". ".join(sentences))
-        generate_question(sentences)
+            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
+            sentences = simplify(". ".join(sentences))
+            questions.extend(generate_question(sentences))
+            if len(questions) > nquestions * 2:
+                print "LIMIT REACHED"
+                print "\n".join(questions)
+                break
     #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
     #                   list(chain.from_iterable(result)))
-
+    os.system("kill -9 $(lsof -i:5556 -t)")
+    '''
+    except:
+        print "EXCEPTION"
+        print "\n".join(questions)
+    '''
 #readData('testSample.txt')
 
-process_article_file('a1small.txt')
-
+if __name__=="__main__":process_article_file('a1.txt', 10)
