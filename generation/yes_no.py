@@ -14,6 +14,7 @@ from itertools import chain
 from textblob import TextBlob
 import gen
 
+
 PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
 NER_PATH=os.path.join(PROJECT_HOME, 'stanford-ner-2015-04-20')
@@ -21,12 +22,24 @@ PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/st
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
+'''
+#Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
 os.environ['CLASSPATH'] = PARSER_PATH + ':' + NER_PATH
-
 parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
 ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
+#END
+'''
+
+#Loading tools on PROD
+stanford_path = os.environ["CORENLP_3_5_2_PATH"]
+parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"),
+                        os.path.join(stanford_path, "stanford-corenlp-3.5.2-models.jar"))
+ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
+                       os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
+#END
+
 lemmatizer = WordNetLemmatizer()
 
 AUXILLARIES = Set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
