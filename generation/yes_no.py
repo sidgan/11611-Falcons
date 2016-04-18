@@ -9,22 +9,37 @@ from collections import Counter
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import wordnet
 import unicodedata
+import FactualStatementExtractor.proc as proc
 from itertools import chain
 from textblob import TextBlob
+import gen
 
-PROJECT_HOME='/Users/sanchitagarwal/Desktop/11611-NLP/Project/'
+
+PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
 NER_PATH=os.path.join(PROJECT_HOME, 'stanford-ner-2015-04-20')
 PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz')
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
+'''
+#Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
 os.environ['CLASSPATH'] = PARSER_PATH + ':' + NER_PATH
-
 parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
 ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
+#END
+'''
+
+#Loading tools on PROD
+stanford_path = os.environ["CORENLP_3_5_2_PATH"]
+parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"),
+                        os.path.join(stanford_path, "stanford-corenlp-3.5.2-models.jar"))
+ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
+                       os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
+#END
+
 lemmatizer = WordNetLemmatizer()
 
 AUXILLARIES = Set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
@@ -142,122 +157,80 @@ def apply_tense_rule(sentence,verb,label):
     
     return [q1,q2]
 
-#takes data corresponding to a paragraph
 def generate_question(sentences):
-    
     #most_frequent_NE = get_MostFrequent_NE(data)
-    
     #print most_frequent_NE
-    
     #sentences =  sent_tokenize(data)
-    
     questions = []
-    
     for sentence in sentences:
-        
-        sentence = str(sentence)
-    
         print sentence
-        print ''
-        if len(sentence.split())<=4 or len(sentence.split())>12:
+        if len(sentence.split()) > 12 or len(sentence.split()) < 4:
             #print sentence+"...Sentence not usable!!"
             continue
-    
         parseTree = parser.raw_parse(sentence)
-    
         #root is the root node in the parse tree
+        root = parseTree.next()
+
+        questions.extend(generate_yes_no(root, sentence))
+        questions.extend(generate_who_what(root, ner_tagger))
     
-        for node in parseTree:
-            root = node
-            
-        #print root
-    
-        S = root[0]
-    
-        #only use those sentences that have NP, VP structure at the top
-        if not(len(root)>0 and len(S)>1 and S[0].label()=='NP' and S[1].label()=='VP'):
-            continue
-    
-        node = root[0][1][0]
-    
-        label = node.label()
-        verb = node[0]
-        
-        #print type(verb)
-    
-        if not(type(verb) is unicode and label.startswith('VB')) :
-            continue
-    
-        if verb in AUXILLARIES:
-            q = apply_auxillary_rule(sentence,verb)
-        else:
-            q = apply_tense_rule(sentence,verb,label)
-            
-        
-        subject = S[0][0]
-        
-        #post_processing involves resolving the pronoun with the most common named entity in the same paragraph
-        '''
-        if subject.label()=='PRP':
-            
-            q[0] = post_process(q[0],subject[0],most_frequent_NE)
-            q[1] = post_process(q[1],subject[0],most_frequent_NE)
-        '''
-        
-        questions.append(q[0])
-        questions.append(q[1])
-        
-        print q[0]
-        print q[1]
-        
-        print ''
-        
-    #for q in questions:
-    #    print q+'\n'
-            
+
+def generate_who_what(root, ner_tagger):
+    return gen.apply_subject_rule(root, ner_tagger)
+
+def generate_yes_no(root, sentence):
+    S = root[0]
+    questions = []
+
+    #only use those sentences that have NP, VP structure at the top
+    if not(len(root)>0 and len(S)>1 and S[0].label()=='NP' and S[1].label()=='VP'):
+        return []
+
+    node = root[0][1][0]
+    label = node.label()
+    verb = node[0]
+
+    if not(type(verb) is unicode and label.startswith('VB')) :
+        return []
+
+    if verb in AUXILLARIES:
+        q = apply_auxillary_rule(sentence,verb)
+    else:
+        q = apply_tense_rule(sentence,verb,label)
+
+    '''
+    #post_processing involves resolving the pronoun with the most common named entity in the same paragraph
+    subject = S[0][0]
+    if subject.label()=='PRP':
+
+        q[0] = post_process(q[0],subject[0],most_frequent_NE)
+        q[1] = post_process(q[1],subject[0],most_frequent_NE)
+    '''
+
+    questions.append(q[0])
+    questions.append(q[1])
+    print q[0]
+    print q[1]
+
+    return questions
 
 def simplify(sentences):
-    
-    parser_server = 'FactualStatementExtractor/runStanfordParserServer.sh'
-    
-    
-    
+    return proc.simplify(sentences)
+        
 def process_article_file(filename):    
-    """
-    Process articles by removing irrelevant sentences and removing non-ascii characters
-
-    :param filename: path of the article
-    :param nlp: spacy NLP processor
-    :return: processed article as a list of sentences
-    """
-    
-    regex = r'\([^)]*\)'
-
+    bracket_regex = r'\([^)]*\)'
+    sentences = []
     with open(filename, 'r') as article:
         for line in article:
-            
             cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-            #remove content in brackets
-            cleaned = re.sub(regex,'',cleaned)
-            
-            sentences = TextBlob(cleaned).sentences
-            
-            sentences = simplify(sentences)
-            
-            generate_question(sentences)
-            
-
+            cleaned = re.sub(bracket_regex,'',cleaned)
+            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences])
+        sentences = simplify(". ".join(sentences))
+        generate_question(sentences)
     #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
     #                   list(chain.from_iterable(result)))
 
-    #print sentences
-
-    #return sentences
-
-        
-#generate_question(s)
-
 #readData('testSample.txt')
 
-process_article_file('a1.txt')
+process_article_file('a1small.txt')
 

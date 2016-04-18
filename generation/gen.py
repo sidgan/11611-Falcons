@@ -12,12 +12,13 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+'''
 PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
 NER_PATH=os.path.join(PROJECT_HOME, 'stanford-ner-2015-04-20')
 PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
-
+'''
 WHO_PRONOUNS=set(["i", "he", "she", "you", "we", "they"])
 WHAT_PRONOUNS=set(["it", "this", "that"])
 VERB_PAST='VBD'
@@ -26,23 +27,23 @@ VERB_FUTURE='VB'
 DAYS_MONTHS=[name.lower() for name in calendar.day_name[:] + calendar.month_name[1:] + ["a.m", "p.m"]]
 LOCATION_TIME_PP=["in", "on", "over", "at", "during"]
 
-with open("sample.txt") as sample_file:
-    raw_text = sample_file.readline()
-
+'''
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
 os.environ['CLASSPATH'] = PARSER_PATH + ':' + NER_PATH
+'''
 
-s = ["The boy is playing with a ball.", "Sachin won an award.", "I was born on a Tuesday", "Manchester United played on a Monday in Pittsburgh", "Why Did You Put Up That Banner When We Won 4 Nil?"]
-s = raw_text.split(".")[:]
+lemmatizer = WordNetLemmatizer()
+'''
 parser = stanford.StanfordParser(model_path=PARSER_MODEL_PATH)
 ner_tagger = StanfordNERTagger(NER_MODEL_PATH)
-lemmatizer = WordNetLemmatizer()
+
 
 sentences = parser.raw_parse_sents(([x.lower() for x in s[:]]))
 #tags = [ner_tagger.tag(sentence.split(DELIMITERS)) for sentence in s]
+'''
 
-def get_wh_word(np_tree):
+def get_wh_word(ner_tagger, np_tree):
     tags = ner_tagger.tag(np_tree.leaves())
     #TODO: Apply WH word logic
     for num, word in enumerate(np_tree.leaves()):
@@ -52,11 +53,14 @@ def get_wh_word(np_tree):
             return "What"
     return "What"
 
-def apply_subject_rule(sentence):
+def apply_subject_rule(sentence, ner_tagger):
     s = sentence[0]
     if s[0].label() == "NP" and s[1].label() == "VP":
         print "Subject"
-        print get_wh_word(s[0]) + " " +  " ".join(s[1].flatten())
+        question = get_wh_word(ner_tagger, s[0]) + " " +  " ".join(s[1].flatten())
+        print question
+        return [question]
+    return []
 
 
 def check_location(tree, count, curr_count = 0):
@@ -71,7 +75,6 @@ def check_location(tree, count, curr_count = 0):
             if location_tree != None:
                 return location_tree
     return None
-
 
 def get_verb_form(label):
     if label == VERB_PAST:
@@ -88,7 +91,6 @@ def get_tense_root(tree):
     tree.remove(tree[0])
     tree.insert(0, Tree('Inserted', [verb_root]))
     return verb
-
 
 def get_wh_word_location_time(location_tree):
     for word in location_tree.leaves():
@@ -119,9 +121,3 @@ def apply_location_rule(orig_sentence):
         count += 1
         sentence = orig_sentence.copy(deep=True)
         location_tree = check_location(sentence, count)
-
-for line in sentences:
-    for sentence in line:
-        apply_subject_rule(sentence)
-        apply_location_rule(sentence)
-        sentence.draw()

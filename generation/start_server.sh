@@ -1,0 +1,2 @@
+cd FactualStatementExtractor
+sh runStanfordParserServer.sh
