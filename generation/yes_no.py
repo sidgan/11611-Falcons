@@ -208,7 +208,7 @@ def generate_yes_no(root, sentence):
         q[0] = post_process(q[0],subject[0],most_frequent_NE)
         q[1] = post_process(q[1],subject[0],most_frequent_NE)
     '''
-    if random.random() > 0.5:
+    if random.random() > 0.25:
         questions.append((q[0], YES_NO_TYPE))
     else:
         questions.append((q[1], YES_NO_TYPE))
@@ -221,34 +221,31 @@ def simplify(sentences):
 def process_article_file(filename, nquestions):
     bracket_regex = r'\([^)]*\)'
     questions = []
-
-    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-    FNULL = open(os.devnull, 'w')
-    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
-    time.sleep(15)
-    with open(filename, 'r') as article:
-        for line in article:
-            sentences = []
-            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-            cleaned = re.sub(bracket_regex,'',cleaned)
-            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
-            print sentences
-            sentences = simplify(". ".join(sentences))
-            if sentences is None:
-                continue
-            questions.extend(generate_question(sentences))
-            print len(questions)
-            if len(questions) > nquestions * 3:
-                questions = ranker.rank(questions, nquestions)
-                random.shuffle(questions)
-                print "\n".join(questions)
-                break
-    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-    '''
+    try:
+        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+        FNULL = open(os.devnull, 'w')
+        server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
+        time.sleep(15)
+        with open(filename, 'r') as article:
+            for line in article:
+                sentences = []
+                cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+                cleaned = re.sub(bracket_regex,'',cleaned)
+                sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
+                sentences = simplify(". ".join(sentences))
+                if sentences is None:
+                    continue
+                questions.extend(generate_question(sentences))
+                if len(questions) > nquestions * 3:
+                    questions_ranked = ranker.rank(questions, nquestions)
+                    random.shuffle(questions_ranked)
+                    print "\n".join(questions_ranked)
+                    break
+        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     except:
         os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
         print sys.exc_info()[0]
         for question in questions[:nquestions]:
             print question[0]
-    '''
+
 if __name__=="__main__":process_article_file('a2.txt', 10)

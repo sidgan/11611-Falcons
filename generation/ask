@@ -1,0 +1,12 @@
+#!/usr/bin/python ask
+
+import sys
+import yes_no
+
+def main():
+    filename = sys.argv[2]
+    nquestions = sys.argv[3]
+    yes_no.process_article_file(filename, nquestions)
+
+if __name__=="__main__":main()
+
