@@ -15,6 +15,7 @@ WHAT_PRONOUNS=set(["it", "this", "that"])
 WHAT_TAGS=set(["noun.Tops","noun.act","noun.animal","noun.artifact","noun.attribute","noun.body","noun.cognition","noun.communication","noun.event","noun.feeling","noun.food","noun.group","noun.location","noun.motive","noun.object","noun.other","noun.phenomenon","noun.plant","noun.possession","noun.process","noun.quantity","noun.relation","noun.shape","noun.state","noun.substance"])
 WHERE_TAGS=set(["noun.location"])
 WHEN_TAGS=set(["noun.time"])
+WHO_WHAT_TYPE="who_what"
 VERB_PAST='VBD'
 VERB_PRESENT='VBP'
 VERB_FUTURE='VB'
@@ -40,7 +41,7 @@ def apply_subject_rule(sentence, ner_tagger):
     if s[0].label() == "NP" and s[1].label() == "VP":
         wh_word = get_wh_word(ner_tagger, s[0])
         question =  wh_word + " " +  " ".join(s[1].flatten()) + "?"
-        return [(question, wh_word.lower())]
+        return [(question, WHO_WHAT_TYPE)]
     return []
 
 

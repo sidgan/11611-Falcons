@@ -8,7 +8,7 @@ def tag(sentence):
         tags = entry.split("\t")
         if len(tags) > 2:
             actual_tags = tags[2].split("-")
-            if len(actual_tags < 2):
+            if len(actual_tags) < 2:
                 ret.append("0")
             else:
                 ret.append(actual_tags[1])
