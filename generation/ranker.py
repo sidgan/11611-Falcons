@@ -103,7 +103,7 @@ def rank(question_type_list,N):
         a1+=1
         t1-=1
         total+=1
-    
+    #print ranked_list
     return ranked_list
  
 def main():       

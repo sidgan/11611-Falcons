@@ -23,7 +23,7 @@ PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/st
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
-
+'''
 #Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
@@ -39,7 +39,7 @@ parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3
 ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
                        os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
 #END
-'''
+
 
 lemmatizer = WordNetLemmatizer()
 
@@ -171,7 +171,7 @@ def generate_question(sentences):
         root = parseTree.next()
         if helper.isPronounResolved(root)==False:
             continue
-        print sentence
+        #print sentence
         questions.extend(generate_yes_no(root, sentence))
         questions.extend(generate_who_what(root, ner_tagger))
         #questions.extend(generate_when_where(root))
@@ -225,8 +225,8 @@ def process_article_file(filename, nquestions):
     #try:
     os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     FNULL = open(os.devnull, 'w')
-    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
-    time.sleep(15)
+    server = Popen("sh runStanfordParserServer.sh".split(), cwd="question-dir/11611-Falcons/generation/FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
+    time.sleep(12)
     with open(filename, 'r') as article:
         for line in article:
             sentences = []
@@ -237,11 +237,12 @@ def process_article_file(filename, nquestions):
             if sentences is None:
                 continue
             questions.extend(generate_question(sentences))
+            #print len(questions)
             if len(questions) > nquestions * 3:
-                questions_ranked = ranker.rank(questions, nquestions)
-                random.shuffle(questions_ranked)
-                print "\n".join(questions_ranked)
                 break
+        questions_ranked = ranker.rank(questions, nquestions)
+        random.shuffle(questions_ranked)
+        print "\n".join(questions_ranked)
     os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     '''
     except:
@@ -251,4 +252,4 @@ def process_article_file(filename, nquestions):
             print question[0]
     '''
 
-if __name__=="__main__":process_article_file('a2.txt', 10)
+if __name__=="__main__":process_article_file('question-dir/11611-Falcons/generation/a2.txt', 10)

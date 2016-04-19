@@ -1,7 +1,7 @@
 from subprocess import PIPE, Popen
 
 def tag(sentence):
-    p = Popen("sh run.sh".split(),stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd="SupersenseTagger" )
+    p = Popen("sh run.sh".split(),stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd="question-dir/11611-Falcons/generation/SupersenseTagger" )
     answer = p.communicate(sentence)
     ret = []
     for entry in answer[0].split("\n"):
