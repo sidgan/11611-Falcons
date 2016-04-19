@@ -219,33 +219,36 @@ def simplify(sentences):
     return proc.simplify(sentences)
         
 def process_article_file(filename, nquestions):
+    nquestions = int(nquestions)
     bracket_regex = r'\([^)]*\)'
     questions = []
-    try:
-        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-        FNULL = open(os.devnull, 'w')
-        server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
-        time.sleep(15)
-        with open(filename, 'r') as article:
-            for line in article:
-                sentences = []
-                cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-                cleaned = re.sub(bracket_regex,'',cleaned)
-                sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
-                sentences = simplify(". ".join(sentences))
-                if sentences is None:
-                    continue
-                questions.extend(generate_question(sentences))
-                if len(questions) > nquestions * 3:
-                    questions_ranked = ranker.rank(questions, nquestions)
-                    random.shuffle(questions_ranked)
-                    print "\n".join(questions_ranked)
-                    break
-        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+    #try:
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+    FNULL = open(os.devnull, 'w')
+    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
+    time.sleep(15)
+    with open(filename, 'r') as article:
+        for line in article:
+            sentences = []
+            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+            cleaned = re.sub(bracket_regex,'',cleaned)
+            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
+            sentences = simplify(". ".join(sentences))
+            if sentences is None:
+                continue
+            questions.extend(generate_question(sentences))
+            if len(questions) > nquestions * 3:
+                questions_ranked = ranker.rank(questions, nquestions)
+                random.shuffle(questions_ranked)
+                print "\n".join(questions_ranked)
+                break
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+    '''
     except:
         os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
         print sys.exc_info()[0]
         for question in questions[:nquestions]:
             print question[0]
+    '''
 
 if __name__=="__main__":process_article_file('a2.txt', 10)
