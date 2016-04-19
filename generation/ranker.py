@@ -32,12 +32,10 @@ def get_score(question,q_type):
             if p.name == 'value':
                 break
     
-        print p
-    
         no_of_errors = float(p.text)
     
 
-    print no_of_errors
+    #print no_of_errors
     
     length = len(nltk.word_tokenize(question))
     
@@ -55,7 +53,7 @@ def compare(t):
     
     return t[1]
 
-def rank(question_type_list):
+def rank(question_type_list,N):
     
     type_to_questions = defaultdict(list)
     
@@ -77,16 +75,65 @@ def rank(question_type_list):
         type_to_questions[q_type] = sorted(q_list,reverse=True,key=compare)
         
         
-    #create a new merged list
+    #create a new merged list mixing questions of different types
     ranked_list = []
     
+    yesQ = type_to_questions['yes']
+    t1 = len(yesQ)
+    
+    whatQ = type_to_questions['what']
+    t2 = len(whatQ)
+    
+    whoQ = type_to_questions['who']
+    t3 = len(whoQ)
+    
+    noQ = type_to_questions['no']
+    t4 = len(noQ)
     
     
+    a1 = int(N*.5)
+    if t1<a1:
+        a1 = t1
+    t1-=a1
         
-    #for l in q_types:
-    #    print type_to_questions[l]
+    a2 = int(N*.2)
+    if t2<a2:
+        a2 = t2
+    t2-=a2
+    
+    a3 = int(N*.2)
+    if t3<a3:
+        a3 = t3
+    t3-=a3
         
-
+    a4 = N-a1-a2-a3
+    if t4<a4:
+        a4 = t4
+    t4-=a4
+        
+    total = a1+a2+a3+a4
+    
+    print total
+    
+    for i in range(a1):
+        if i<len(yesQ):
+            ranked_list.append(yesQ[i][0])    
+    for i in range(a2):
+        ranked_list.append(whatQ[i][0])
+    for i in range(a3):
+        ranked_list.append(whoQ[i][0])
+    for i in range(a4):
+        ranked_list.append(noQ[i][0])
+        
+    while(total<N):
+        if t1>0:
+            ranked_list.append(yesQ[a1][0])
+            a1+=1
+            t1-=1
+        total+=1
+    
+    return ranked_list
+        
 questionList = [('Does most people learn English for practical rather than ideological reasons?','yes'),
                 ('Did decolonisation proceed throughout the British Empire in the 1950s and 1960s?','yes'),
                 ('Does english continue to be an official language of India?','yes'),
@@ -94,6 +141,6 @@ questionList = [('Does most people learn English for practical rather than ideol
                 ('Is newspaper publishing book publishing?','yes'),
                 ('Is english an official language in most countries?','no')]
 
-rank(questionList)
+print rank(questionList,3)
 #question = 'Does most people learn English for practical rather than ideological reasons?'
 #print get_score(question) 
