@@ -13,6 +13,8 @@ WHO_PRONOUNS=set(["i", "he", "she", "you", "we", "they"])
 WHO_TAGS=set(["noun.person", "noun.group"])
 WHAT_PRONOUNS=set(["it", "this", "that"])
 WHAT_TAGS=set(["noun.Tops","noun.act","noun.animal","noun.artifact","noun.attribute","noun.body","noun.cognition","noun.communication","noun.event","noun.feeling","noun.food","noun.group","noun.location","noun.motive","noun.object","noun.other","noun.phenomenon","noun.plant","noun.possession","noun.process","noun.quantity","noun.relation","noun.shape","noun.state","noun.substance"])
+WHERE_TAGS=set(["noun.location"])
+WHEN_TAGS=set(["noun.time"])
 VERB_PAST='VBD'
 VERB_PRESENT='VBP'
 VERB_FUTURE='VB'
@@ -71,10 +73,16 @@ def get_tense_root(tree):
     return verb
 
 def get_wh_word_location_time(location_tree):
+    tags = proc.tag(" ".join(location_tree.leaves()))
+    for tag in tags:
+        if tag in WHEN_TAGS:
+            return "When"
+        elif tag in WHERE_TAGS:
+            return "Where"
     for word in location_tree.leaves():
         if word in DAYS_MONTHS or re.match(r'[1-2][0-9][0-9][0-9]\b', word):
             return "When"
-    return "Where"
+    return None
 
 def remove_location(tree, location_tree):
     if tree.count(location_tree) > 0:
@@ -89,13 +97,15 @@ def remove_location(tree, location_tree):
         return None, None
 
 def apply_location_rule(orig_sentence):
+    questions = []
     sentence = orig_sentence.copy(deep=True)
     location_tree = check_location(sentence, 0)
     count = 1
     while location_tree != None:
         wh_word, verb = remove_location(sentence, location_tree)
-        #print_sent = [wh_word, verb] + sentence.leaves()
-        #print " ".join(print_sent)
+        print_sent = [wh_word, verb] + sentence.leaves()
+        print " ".join(print_sent)
+        questions.append(" ".join(print_sent))
         count += 1
         sentence = orig_sentence.copy(deep=True)
         location_tree = check_location(sentence, count)

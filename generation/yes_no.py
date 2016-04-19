@@ -1,12 +1,9 @@
 import os
 from nltk.parse import stanford
-from nltk.tree import Tree
 import re
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tag import StanfordNERTagger
 from collections import Counter
-from nltk.tokenize import sent_tokenize
-from nltk.corpus import wordnet
 import unicodedata
 import FactualStatementExtractor.proc as proc
 from itertools import chain
@@ -15,6 +12,7 @@ import gen
 import time
 from subprocess import Popen, PIPE
 import helper
+import ranker
 
 PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
@@ -130,11 +128,8 @@ def yes_no_rule_helper(sentence,verb,base_verb,label,negative=False):
         question = 'Did'+" "+question+"?"
     else:
         question = 'Does'+" "+question+"?"
-    
-    #print question
-    
+
     #create_no_question(question)
-    
     #question = post_process(question)
     
     return question
@@ -155,6 +150,10 @@ def apply_tense_rule(sentence,verb,label):
     
     return [q1,q2]
 
+
+def generate_when_where(root, ner_tagger):
+    return gen.apply_location_rule(root)
+
 def generate_question(sentences):
     #most_frequent_NE = get_MostFrequent_NE(data)
     #print most_frequent_NE
@@ -173,6 +172,7 @@ def generate_question(sentences):
         print sentence
         questions.extend(generate_yes_no(root, sentence))
         questions.extend(generate_who_what(root, ner_tagger))
+        #questions.extend(generate_when_where(root))
     return questions
 
 def generate_who_what(root, ner_tagger):
@@ -209,8 +209,6 @@ def generate_yes_no(root, sentence):
 
     questions.append((q[0], YES_TYPE))
     questions.append((q[1], NO_TYPE))
-    #print q[0]
-    #print q[1]
 
     return questions
 
@@ -220,32 +218,26 @@ def simplify(sentences):
 def process_article_file(filename, nquestions):
     bracket_regex = r'\([^)]*\)'
     questions = []
-    #try:
-    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
-    time.sleep(15)
-    print "OUT OF SLEEP"
-    with open(filename, 'r') as article:
-        for line in article:
-            sentences = []
-            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-            cleaned = re.sub(bracket_regex,'',cleaned)
-            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
-            sentences = simplify(". ".join(sentences))
-            questions.extend(generate_question(sentences))
-            print len(questions)
-            if len(questions) > nquestions * 2:
-                print "LIMIT REACHED"
-                print questions
-                break
-    #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
-    #                   list(chain.from_iterable(result)))
-    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-    '''
+    try:
+        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+        server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
+        time.sleep(15)
+        with open(filename, 'r') as article:
+            for line in article:
+                sentences = []
+                cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+                cleaned = re.sub(bracket_regex,'',cleaned)
+                sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
+                sentences = simplify(". ".join(sentences))
+                questions.extend(generate_question(sentences))
+                print len(questions)
+                if len(questions) > nquestions * 2:
+                    print questions
+                    questions = ranker.rank(questions)
+                    break
+        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     except:
-        print "EXCEPTION"
-        print "\n".join(questions)
-    '''
-#readData('testSample.txt')
+        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+        print questions
 
 if __name__=="__main__":process_article_file('a1.txt', 10)

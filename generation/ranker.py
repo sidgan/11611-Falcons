@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from _collections import defaultdict
 
-def get_score(question,q_type):
+def get_score(question, q_type):
     
     payload = {'key': 'deepakkey', 'data': question}
     
@@ -50,7 +50,6 @@ def get_score(question,q_type):
     return final_score
     
 def compare(t):
-    
     return t[1]
 
 def rank(question_type_list,N):
@@ -58,22 +57,16 @@ def rank(question_type_list,N):
     type_to_questions = defaultdict(list)
     
     for pair in question_type_list:
-        
         question = pair[0]
         question_type = pair[1]
-        
         score = get_score(question,question_type)
-        
         type_to_questions[question_type].append(tuple([question,score]))
-    
+
     q_types = type_to_questions.keys()
     
     for q_type in q_types:
-        
         q_list = type_to_questions[q_type]
-        
         type_to_questions[q_type] = sorted(q_list,reverse=True,key=compare)
-        
         
     #create a new merged list mixing questions of different types
     ranked_list = []
@@ -113,8 +106,6 @@ def rank(question_type_list,N):
         
     total = a1+a2+a3+a4
     
-    print total
-    
     for i in range(a1):
         if i<len(yesQ):
             ranked_list.append(yesQ[i][0])    
@@ -133,14 +124,16 @@ def rank(question_type_list,N):
         total+=1
     
     return ranked_list
-        
-questionList = [('Does most people learn English for practical rather than ideological reasons?','yes'),
-                ('Did decolonisation proceed throughout the British Empire in the 1950s and 1960s?','yes'),
-                ('Does english continue to be an official language of India?','yes'),
-                ('Is also?','yes'),
-                ('Is newspaper publishing book publishing?','yes'),
-                ('Is english an official language in most countries?','no')]
 
-print rank(questionList,3)
-#question = 'Does most people learn English for practical rather than ideological reasons?'
-#print get_score(question) 
+def main():
+    questionList = [('Does most people learn English for practical rather than ideological reasons?','yes'),
+                    ('Did decolonisation proceed throughout the British Empire in the 1950s and 1960s?','yes'),
+                    ('Does english continue to be an official language of India?','yes'),
+                    ('Is also?','yes'),
+                    ('Is newspaper publishing book publishing?','yes'),
+                    ('Is english an official language in most countries?','no')]
+
+    print rank(questionList,3)
+    #question = 'Does most people learn English for practical rather than ideological reasons?'
+    #print get_score(question)
+if __name__=="__main__":main()
