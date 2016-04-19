@@ -7,7 +7,11 @@ def tag(sentence):
     for entry in answer[0].split("\n"):
         tags = entry.split("\t")
         if len(tags) > 2:
-            ret.append(tags[2])
+            actual_tags = tags[2].split("-")
+            if len(actual_tags < 2):
+                ret.append("0")
+            else:
+                ret.append(actual_tags[1])
     return ret
 
 def main():

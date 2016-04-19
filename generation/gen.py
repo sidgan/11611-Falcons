@@ -26,6 +26,7 @@ lemmatizer = WordNetLemmatizer()
 def get_wh_word(ner_tagger, np_tree):
     #tags = ner_tagger.tag(np_tree.leaves())
     tags = proc.tag(" ".join(np_tree.leaves()))
+    print tags
     #TODO: Apply WH word logic
     for num, word in enumerate(np_tree.leaves()):
         if tags[num] in WHO_TAGS or word in WHO_PRONOUNS:

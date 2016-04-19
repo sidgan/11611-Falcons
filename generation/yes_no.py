@@ -23,7 +23,7 @@ PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/st
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
-'''
+
 #Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
@@ -39,6 +39,7 @@ parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3
 ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
                        os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
 #END
+'''
 
 lemmatizer = WordNetLemmatizer()
 
