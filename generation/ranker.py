@@ -107,11 +107,10 @@ def rank(question_type_list,N):
     for i in range(a3):
         ranked_list.append(whoQ[i][0])
 
-    while(total<N):
-        if t1>0:
-            ranked_list.append(yes_noQ[a1][0])
-            a1+=1
-            t1-=1
+    while(total<N and t1 > 0):
+        ranked_list.append(yes_noQ[a1][0])
+        a1+=1
+        t1-=1
         total+=1
     
     return ranked_list

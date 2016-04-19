@@ -4,7 +4,9 @@ def isPronounResolved(root):
         return False
     flag = False
     for token in np:
+        if token.label().startswith('PRP'):
+            flag = False
+            break
         if token.label().startswith('NN'):
             flag = True
-            break
     return flag

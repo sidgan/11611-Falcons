@@ -1,4 +1,6 @@
 import os
+import random
+import sys
 from nltk.parse import stanford
 import re
 from nltk.stem.wordnet import WordNetLemmatizer
@@ -41,8 +43,7 @@ ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/
 lemmatizer = WordNetLemmatizer()
 
 AUXILLARIES = set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
-YES_TYPE="yes"
-NO_TYPE="no"
+YES_NO_TYPE="yes_no"
 
 
 #checks if the question has a pronoun as the subject. If true, it replaces the pronoun with the most common named 
@@ -206,9 +207,10 @@ def generate_yes_no(root, sentence):
         q[0] = post_process(q[0],subject[0],most_frequent_NE)
         q[1] = post_process(q[1],subject[0],most_frequent_NE)
     '''
-
-    questions.append((q[0], YES_TYPE))
-    questions.append((q[1], NO_TYPE))
+    if random.random() > 0.5:
+        questions.append((q[0], YES_NO_TYPE))
+    else:
+        questions.append((q[1], YES_NO_TYPE))
 
     return questions
 
@@ -218,26 +220,30 @@ def simplify(sentences):
 def process_article_file(filename, nquestions):
     bracket_regex = r'\([^)]*\)'
     questions = []
-    try:
-        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-        server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
-        time.sleep(15)
-        with open(filename, 'r') as article:
-            for line in article:
-                sentences = []
-                cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
-                cleaned = re.sub(bracket_regex,'',cleaned)
-                sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
-                sentences = simplify(". ".join(sentences))
-                questions.extend(generate_question(sentences))
-                print len(questions)
-                if len(questions) > nquestions * 2:
-                    print questions
-                    questions = ranker.rank(questions)
-                    break
-        os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
+    time.sleep(15)
+    with open(filename, 'r') as article:
+        for line in article:
+            sentences = []
+            cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
+            cleaned = re.sub(bracket_regex,'',cleaned)
+            sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
+            print sentences
+            sentences = simplify(". ".join(sentences))
+            questions.extend(generate_question(sentences))
+            print len(questions)
+            if len(questions) > nquestions * 3:
+                questions = ranker.rank(questions, nquestions)
+                print "\n".join(random.shuffle(questions))
+                break
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
+    '''
     except:
         os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-        print questions
-
-if __name__=="__main__":process_article_file('a1.txt', 10)
+        print sys.exc_info()[0]
+        for question in questions[:nquestions]:
+            print question[0]
+    '''
+if __name__=="__main__":process_article_file('a2.txt', 10)
