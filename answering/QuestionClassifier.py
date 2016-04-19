@@ -38,8 +38,8 @@ class QuestionClassifier:
         if self.USE_PICKLE:
             logger.debug('Loading pickled model')
 
-            self.MODEL = joblib.load('../data/q_classifier.pkl')
-            self.FEATURE_TEMPLATE = joblib.load('../data/feature_dict.pkl')
+            self.MODEL = joblib.load('./11611-Falcons/data/q_classifier.pkl')
+            self.FEATURE_TEMPLATE = joblib.load('./11611-Falcons/data/feature_dict.pkl')
 
             logger.debug('Model loaded successfully')
 
@@ -113,6 +113,12 @@ class QuestionClassifier:
         return accuracy_score(testing_labels, predictions), predictions
 
     def check_yes_no(self, question):
+        """
+        Checks if the question falls into the yes/no category
+
+        :param question: question to be checked
+        :return: True/False 
+        """
         yes_no_words = ('is', 'are', 'was', 'has', 'have', 'had', 'do', 'did', 'does', 'will', 'would', 'can', 'could', 'shall',
                         'should')
         first_word = question.split()[0].lower()

@@ -9,11 +9,11 @@ __author__ = 'pbamotra'
 nlp = English()
 WORD = re.compile(r'\w+')
 # ------------ Controls if the system runs in simulation mode or production mode ------------ #
-IS_PRODUCTION_MODE = False 
+IS_PRODUCTION_MODE = True 
 # ------------------------------------------------------------------------------------------- #
 CANDIDATE_THRESHOLD = 10
 USE_PICKLE = True
-VERBOSITY = logging.INFO if IS_PRODUCTION_MODE else logging.DEBUG
+VERBOSITY = logging.ERROR if IS_PRODUCTION_MODE else logging.DEBUG
 
 
 def deprecated(func):
