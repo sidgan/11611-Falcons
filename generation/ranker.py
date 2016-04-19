@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from _collections import defaultdict
 
-def get_score(question):
+def get_score(question,q_type):
     
     payload = {'key': 'deepakkey', 'data': question}
     
@@ -42,8 +42,12 @@ def get_score(question):
     length = len(nltk.word_tokenize(question))
     
     #print length
-    
     final_score = 1*length + 10 - (5*no_of_errors)
+    
+    if q_type == 'yes':
+        final_score+=10
+    elif q_type =='no':
+        final_score-=5
     
     return final_score
     
@@ -60,7 +64,7 @@ def rank(question_type_list):
         question = pair[0]
         question_type = pair[1]
         
-        score = get_score(question)
+        score = get_score(question,question_type)
         
         type_to_questions[question_type].append(tuple([question,score]))
     
@@ -73,8 +77,14 @@ def rank(question_type_list):
         type_to_questions[q_type] = sorted(q_list,reverse=True,key=compare)
         
         
-    for l in q_types:
-        print type_to_questions[l]
+    #create a new merged list
+    ranked_list = []
+    
+    
+    
+        
+    #for l in q_types:
+    #    print type_to_questions[l]
         
 
 questionList = [('Does most people learn English for practical rather than ideological reasons?','yes'),
