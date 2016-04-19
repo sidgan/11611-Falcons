@@ -232,6 +232,8 @@ def process_article_file(filename, nquestions):
             sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
             print sentences
             sentences = simplify(". ".join(sentences))
+            if sentences is None:
+                continue
             questions.extend(generate_question(sentences))
             print len(questions)
             if len(questions) > nquestions * 3:
