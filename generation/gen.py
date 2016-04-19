@@ -35,10 +35,9 @@ def get_wh_word(ner_tagger, np_tree):
 def apply_subject_rule(sentence, ner_tagger):
     s = sentence[0]
     if s[0].label() == "NP" and s[1].label() == "VP":
-        print "Subject"
-        question = get_wh_word(ner_tagger, s[0]) + " " +  " ".join(s[1].flatten())
-        print question
-        return [question]
+        wh_word = get_wh_word(ner_tagger, s[0])
+        question =  wh_word + " " +  " ".join(s[1].flatten()) + "?"
+        return [(question, wh_word.lower())]
     return []
 
 
@@ -95,8 +94,8 @@ def apply_location_rule(orig_sentence):
     count = 1
     while location_tree != None:
         wh_word, verb = remove_location(sentence, location_tree)
-        print_sent = [wh_word, verb] + sentence.leaves()
-        print " ".join(print_sent)
+        #print_sent = [wh_word, verb] + sentence.leaves()
+        #print " ".join(print_sent)
         count += 1
         sentence = orig_sentence.copy(deep=True)
         location_tree = check_location(sentence, count)

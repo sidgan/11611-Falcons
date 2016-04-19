@@ -5,9 +5,8 @@ import os
 import time
 
 def simplify(sentences):
-    p = Popen("java -Xmx1500m -cp factual-statement-extractor.jar:lib/jwnl.jar:lib/stanford-parser-2008-10-26.jar:lib/commons-logging.jar:lib/commons-lang.jar edu/cmu/ark/SentenceSimplifier".split(), stdin=PIPE, stdout=PIPE, bufsize=1, cwd="FactualStatementExtractor")
+    p = Popen("java -Xmx1500m -cp factual-statement-extractor.jar:lib/jwnl.jar:lib/stanford-parser-2008-10-26.jar:lib/commons-logging.jar:lib/commons-lang.jar edu/cmu/ark/SentenceSimplifier".split(), stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1, cwd="FactualStatementExtractor")
     answer = p.communicate(sentences)
-    p.wait()
     return answer[0].split("\n")
 
 def main():

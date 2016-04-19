@@ -1,7 +1,6 @@
 import os
 from nltk.parse import stanford
 from nltk.tree import Tree
-from sets import Set
 import re
 from nltk.stem.wordnet import WordNetLemmatizer
 from nltk.tag import StanfordNERTagger
@@ -15,6 +14,7 @@ from textblob import TextBlob
 import gen
 import time
 from subprocess import Popen, PIPE
+import helper
 
 PROJECT_HOME='/home/deepak/Downloads/NLP/project'
 PARSER_PATH=os.path.join(PROJECT_HOME, 'stanford-parser-full-2015-04-20')
@@ -42,7 +42,9 @@ ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/
 '''
 lemmatizer = WordNetLemmatizer()
 
-AUXILLARIES = Set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
+AUXILLARIES = set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
+YES_TYPE="yes"
+NO_TYPE="no"
 
 
 #checks if the question has a pronoun as the subject. If true, it replaces the pronoun with the most common named 
@@ -166,11 +168,13 @@ def generate_question(sentences):
         parseTree = parser.raw_parse(sentence)
         #root is the root node in the parse tree
         root = parseTree.next()
-
+        if helper.isPronounResolved(root)==False:
+            continue
+        print sentence
         questions.extend(generate_yes_no(root, sentence))
         questions.extend(generate_who_what(root, ner_tagger))
     return questions
-    
+
 def generate_who_what(root, ner_tagger):
     return gen.apply_subject_rule(root, ner_tagger)
 
@@ -203,10 +207,10 @@ def generate_yes_no(root, sentence):
         q[1] = post_process(q[1],subject[0],most_frequent_NE)
     '''
 
-    questions.append(q[0])
-    questions.append(q[1])
-    print q[0]
-    print q[1]
+    questions.append((q[0], YES_TYPE))
+    questions.append((q[1], NO_TYPE))
+    #print q[0]
+    #print q[1]
 
     return questions
 
@@ -215,27 +219,28 @@ def simplify(sentences):
         
 def process_article_file(filename, nquestions):
     bracket_regex = r'\([^)]*\)'
-    sentences = []
     questions = []
     #try:
-    os.system("kill -9 $(lsof -i:5556 -t)")
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
     time.sleep(15)
     print "OUT OF SLEEP"
     with open(filename, 'r') as article:
         for line in article:
+            sentences = []
             cleaned = unicodedata.normalize('NFKD', line.decode('utf-8').strip()).encode('ASCII', 'ignore')
             cleaned = re.sub(bracket_regex,'',cleaned)
             sentences.extend([str(sent) for sent in TextBlob(cleaned).sentences if len(sent.tokens) > 4 and len(sent.tokens) < 20])
             sentences = simplify(". ".join(sentences))
             questions.extend(generate_question(sentences))
+            print len(questions)
             if len(questions) > nquestions * 2:
                 print "LIMIT REACHED"
-                print "\n".join(questions)
+                print questions
                 break
     #sentences = filter(lambda sent: (len(sent.word_counts) > 3) and '.' in sent.tokens,
     #                   list(chain.from_iterable(result)))
-    os.system("kill -9 $(lsof -i:5556 -t)")
+    os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     '''
     except:
         print "EXCEPTION"
