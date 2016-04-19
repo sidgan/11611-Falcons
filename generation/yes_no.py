@@ -12,7 +12,7 @@ from itertools import chain
 from textblob import TextBlob
 import gen
 import time
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 import helper
 import ranker
 
@@ -23,7 +23,7 @@ PARSER_MODEL_PATH=os.path.join(PARSER_PATH, 'stanford-parser-3.5.2-models/edu/st
 #NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.all.3class.distsim.crf.ser.gz')
 NER_MODEL_PATH=os.path.join(NER_PATH, 'classifiers/english.conll.4class.distsim.crf.ser.gz')
 
-
+'''
 #Loading tools on DEV
 os.environ['STANFORD_PARSER'] = PARSER_PATH
 os.environ['STANFORD_MODELS'] = PARSER_PATH
@@ -39,7 +39,7 @@ parser = stanford.StanfordParser(os.path.join(stanford_path, "stanford-corenlp-3
 ner_tagger = StanfordNERTagger(os.path.join(stanford_path, "models/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz"), \
                        os.path.join(stanford_path, "stanford-corenlp-3.5.2.jar"))
 #END
-'''
+
 lemmatizer = WordNetLemmatizer()
 
 AUXILLARIES = set(['is','am','are','was','were','can','could','shall','should','may','might','will','would','has','have','did'])
@@ -222,7 +222,8 @@ def process_article_file(filename, nquestions):
     questions = []
 
     os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
-    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=PIPE, stderr=PIPE)
+    FNULL = open(os.devnull, 'w')
+    server = Popen("sh runStanfordParserServer.sh".split(), cwd="FactualStatementExtractor", stdout=FNULL, stderr=STDOUT)
     time.sleep(15)
     with open(filename, 'r') as article:
         for line in article:
@@ -238,7 +239,8 @@ def process_article_file(filename, nquestions):
             print len(questions)
             if len(questions) > nquestions * 3:
                 questions = ranker.rank(questions, nquestions)
-                print "\n".join(random.shuffle(questions))
+                random.shuffle(questions)
+                print "\n".join(questions)
                 break
     os.system("kill -9 $(lsof -i:5556 -t) >/dev/null 2>&1")
     '''
