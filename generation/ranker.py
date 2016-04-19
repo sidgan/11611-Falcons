@@ -76,36 +76,27 @@ def rank(question_type_list,N):
     yes_noQ = type_to_questions['yes_no']
     t1 = len(yes_noQ)
     
-    whatQ = type_to_questions['what']
-    t2 = len(whatQ)
-    
-    whoQ = type_to_questions['who']
-    t3 = len(whoQ)
+    who_whatQ = type_to_questions['who_what']
+    t2 = len(who_whatQ)
     
     
     a1 = int(N*.6)
     if t1<a1:
         a1 = t1
     t1-=a1
-        
-    a2 = int(N*.2)
+
+    
+    a2 = N-a1
     if t2<a2:
         a2 = t2
     t2-=a2
-    
-    a3 = N-a1-a2
-    if t3<a3:
-        a3 = t3
-    t3-=a3
         
-    total = a1+a2+a3
+    total = a1+a2
     
     for i in range(a1):
         ranked_list.append(yes_noQ[i][0])    
     for i in range(a2):
-        ranked_list.append(whatQ[i][0])
-    for i in range(a3):
-        ranked_list.append(whoQ[i][0])
+        ranked_list.append(who_whatQ[i][0])
 
     while(total<N and t1 > 0):
         ranked_list.append(yes_noQ[a1][0])
